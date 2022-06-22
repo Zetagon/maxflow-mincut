@@ -1,0 +1,8 @@
+[package]
+name = "maxflow-mincut"
+version = "0.1"
+lean_version = "leanprover-community/lean:3.43.0"
+path = "src"
+
+[dependencies]
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "ad49768532540f77b87e78601821bc95f06d9546"}

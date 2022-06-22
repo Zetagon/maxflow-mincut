@@ -22,5 +22,6 @@ class digraph :=
   (sink : α)
   (capacity : E -> ℝ)
   (postive_capacity : ∀ x : E, capacity x ≥ 0)
-def foobar : (digraph α) -> (V × V -> ℝ) -> (V -> ℝ)
-| ⟨v, e, hnonsymm⟩ f  := λs,  ∑ e in (v ∪ s) × s, f e
+
+def mk_in : (digraph α) -> (V × V -> ℝ) -> (V -> ℝ)
+| ⟨v, e, hnonsymm⟩ f  := λs,  ∑ u in (v \ s) , ∑ u' in s, f (u, v)

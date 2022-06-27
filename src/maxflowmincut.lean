@@ -7,36 +7,36 @@ open set
 open_locale big_operators
 universes u
 
-variable α : Type u
+variable V : Type u
 
-local notation `V` := finset α
-local notation `E` := finset (α × α)
 
-class digraph :=
-  (nodes : V)
-  (edges : E)
-  (subset : ∀e: α × α, e ∈ edges → (e.1 ∈ nodes ∧ e.2 ∈ nodes))
-  --(subset : ∀e ∈ edges, (e.1 ∈ nodes ∧ e.2 ∈ nodes))
-  --(subset : ∀ ⟨u, v⟩ ∈ edges → (u ∈ nodes ∧ v ∈ nodes))
-  (nonsymmetric : ∀ (u v : α ), (u, v) ∈ edges → (v, u) ∉ edges)
+class digraph
+  extends quiver V
+  :=
+  (hnonsymmetric : ∀ u v : V, ¬ (hom u v ∧ hom v u))
 
-class capacity := 
-  (G : digraph α)
-  (capacity : E -> ℝ)
-  (postive_capacity : ∀ x : E, capacity x ≥ 0)
-  --(vanishes : )
-  
 
-@[class] structure flow_network
-  extends digraph α :=
-  (source : α)
-  (sink : α)
-  (capacity : E -> ℝ)
-  (postive_capacity : ∀ x : E, capacity x ≥ 0)
+class capacity
+  extends digraph V:=
+  (capacity : V -> V -> ℝ)
+  (positive_capacity : ∀ u v : V, capacity u v ≥ 0)
+  (vanishes : ∀ u v : V, ¬ (hom u v) → capacity u v = 0)
 
-open_locale classical 
-noncomputable def mk_in : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)
-| ⟨v, e, hsubset, hnonsymm⟩ f  := λs,  ∑ u in s, ∑ u' in (v \ s), f (u, u')--∑ e' in (v \ s) × s, f(e')--∑ u in (v \ s)
+class flow_network
+  extends capacity V :=
+  (source : V)
+  (sink : V)
 
-def mk_out : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)
-| ⟨v, e, hsubset, hnonsymm⟩ f  := λs,  sorry--∑ e' in (v \ s) × s, f(e')--∑ u in s, ∑ u' in (v \ s), f (u, u')
+def Vset : set V
+:= λ x, true
+
+
+def mk_out : (V -> ℝ) -> (set V -> ℝ)
+| f := λ s, ∑ y in Vset V, f  y
+
+-- open_locale classical
+-- noncomputable def mk_in : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)
+-- | ⟨v, e, hsubset, hnonsymm⟩ f  := λs,  ∑ u in s, ∑ u' in (v \ s), f (u, u')--∑ e' in (v \ s) × s, f(e')--∑ u in (v \ s)
+
+-- def mk_out : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)
+-- | ⟨v, e, hsubset, hnonsymm⟩ f  := λs,  sorry--∑ e' in (v \ s) × s, f(e')--∑ u in s, ∑ u' in (v \ s), f (u, u')

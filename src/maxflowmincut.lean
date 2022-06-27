@@ -10,28 +10,28 @@ universes u
 variable V : Type u
 
 
-class digraph
+class digraph [fintype V]
   extends quiver V
   :=
   (hnonsymmetric : ∀ u v : V, ¬ (hom u v ∧ hom v u))
 
 
-class capacity
+class capacity [fintype V]
   extends digraph V:=
   (capacity : V -> V -> ℝ)
   (positive_capacity : ∀ u v : V, capacity u v ≥ 0)
   (vanishes : ∀ u v : V, ¬ (hom u v) → capacity u v = 0)
 
-class flow_network
+class flow_network [fintype V]
   extends capacity V :=
   (source : V)
   (sink : V)
 
-def Vset : set V
-:= λ x, true
+def Vset [fintype V] : finset V
+:= finset.univ
 
 
-def mk_out : (V -> ℝ) -> (set V -> ℝ)
+def mk_out [fintype V] : (V -> ℝ) -> (set V -> ℝ)
 | f := λ s, ∑ y in Vset V, f  y
 
 -- open_locale classical

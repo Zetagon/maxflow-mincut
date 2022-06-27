@@ -20,7 +20,7 @@ class digraph [fintype V]
 class capacity [fintype V]
   extends digraph V:=
   (capacity : V -> V -> ℝ)
-  (positive_capacity : ∀ u v : V, capacity u v ≥ 0)
+  (non_neg_capacity : ∀ u v : V, capacity u v ≥ 0)
   (vanishes : ∀ u v : V, ¬ (hom u v) → capacity u v = 0)
 
 class flow_network [fintype V]
@@ -36,6 +36,18 @@ noncomputable def mk_in [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
 
 noncomputable def mk_out [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
 | f := λ s, ∑ x in Vset V, ∑ y in Vset V \ s, f x y
+
+class active_flow_network [fintype V]
+  extends flow_network V :=
+  (f : V -> V -> ℝ)
+  (non_neg_flow : ∀ u v : V, f u v ≥ 0)
+  (no_overflow : ∀ u v : V, f u v ≤ capacity u v)
+  (conservation : ∀ v : V, 
+                  v ∈ Vset V \ {source, sink} → 
+                  mk_out V f {v} = mk_in V f {v})
+
+noncomputable def F_value [fintype V] : active_flow_network V -> ℝ
+:= λ N, mk_out V N.f {N.sink} - mk_in V N.f {N.sink}
 
 
 

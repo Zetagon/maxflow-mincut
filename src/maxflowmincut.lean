@@ -5,6 +5,7 @@ import data.finset
 open set
 
 open_locale big_operators
+open_locale classical
 universes u
 
 variable V : Type u
@@ -30,9 +31,13 @@ class flow_network [fintype V]
 def Vset [fintype V] : finset V
 := finset.univ
 
+noncomputable def mk_in [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
+| f := λ s, ∑ x in Vset V \ s, ∑ y in Vset V, f x y
 
-def mk_out [fintype V] : (V -> ℝ) -> (set V -> ℝ)
-| f := λ s, ∑ y in Vset V, f  y
+noncomputable def mk_out [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
+| f := λ s, ∑ x in Vset V, ∑ y in Vset V \ s, f x y
+
+
 
 -- open_locale classical
 -- noncomputable def mk_in : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)

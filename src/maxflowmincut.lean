@@ -37,9 +37,16 @@ noncomputable def mk_in [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
 noncomputable def mk_out [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
 | f := λ s, ∑ x in Vset V, ∑ y in Vset V \ s, f x y
 
---class flow [fintype] :=
---  (fn : flow_network)
+class flow [fintype V] :=
+  (f : V -> V -> ℝ)
+  (fn : flow_network V)
+  (non_neg_flow : ∀ u v : V, f u v ≥ 0)
+  (no_overflow : ∀ u v : V, f u v ≤ capacity u v)
+  (conservation : ∀ v : V, 
+                  v ∈ Vset V \ {source, sink} → 
+                  mk_out V f {v} = mk_in V f {v})
 
+-- flow f fn false false false
 
 class active_flow_network [fintype V]
   extends flow_network V :=

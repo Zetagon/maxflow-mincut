@@ -11,19 +11,19 @@ universes u
 variable V : Type u
 
 
-class digraph [fintype V]
+structure digraph [fintype V]
   extends quiver V
   :=
   (hnonsymmetric : ∀ u v : V, ¬ (hom u v ∧ hom v u))
 
 
-class capacity [fintype V]
+structure capacity [fintype V]
   extends digraph V:=
   (c : V -> V -> ℝ)
   (non_neg_capacity : ∀ u v : V, c u v ≥ 0)
   (vanishes : ∀ u v : V, ¬ (hom u v) → c u v = 0)
 
-class flow_network [fintype V]
+structure flow_network [fintype V]
   extends capacity V :=
   (source : V)
   (sink : V)
@@ -37,16 +37,16 @@ noncomputable def mk_in [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
 noncomputable def mk_out [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
 | f := λ s, ∑ x in Vset V, ∑ y in Vset V \ s, f x y
 
---class flow [fintype] :=
+--structure flow [fintype] :=
 --  (fn : flow_network)
 
 
-class active_flow_network [fintype V]
+structure active_flow_network [fintype V]
   :=
   (network : flow_network V)
   (f : V -> V -> ℝ)
   (non_neg_flow : ∀ u v : V, f u v ≥ 0)
-  (no_overflow : ∀ u v : V, f u v ≤ capacity.c u v)
+  (no_overflow : ∀ u v : V, f u v ≤ network.c u v)
   (conservation : ∀ v : V, 
                   v ∈ Vset V \ {network.source, network.sink} →
                   mk_out V f {v} = mk_in V f {v})
@@ -57,7 +57,7 @@ noncomputable def F_value [fintype V] : active_flow_network V -> ℝ
 --def make_cut [fintype V] : flow_network V -> (V -> Prop) -> Prop
 --:= λ N f, 
 
-class cut [fintype V]
+structure cut [fintype V]
   :=
   (network : flow_network V)
   (S : finset V)
@@ -97,7 +97,7 @@ lemma superlemma_1 [fintype V] (afn : active_flow_network V) (ct : cut V) :
   end
 
 
-class residual_network [fintype V]
+structure residual_network [fintype V]
   extends quiver V :=
   (source : V)
   (sink : V)

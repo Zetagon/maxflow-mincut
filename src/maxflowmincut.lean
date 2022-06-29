@@ -19,9 +19,9 @@ class digraph [fintype V]
 
 class capacity [fintype V]
   extends digraph V:=
-  (capacity : V -> V -> ℝ)
-  (non_neg_capacity : ∀ u v : V, capacity u v ≥ 0)
-  (vanishes : ∀ u v : V, ¬ (hom u v) → capacity u v = 0)
+  (c : V -> V -> ℝ)
+  (non_neg_capacity : ∀ u v : V, c u v ≥ 0)
+  (vanishes : ∀ u v : V, ¬ (hom u v) → c u v = 0)
 
 class flow_network [fintype V]
   extends capacity V :=
@@ -37,57 +37,56 @@ noncomputable def mk_in [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
 noncomputable def mk_out [fintype V] : (V -> V -> ℝ) -> (finset V -> ℝ)
 | f := λ s, ∑ x in Vset V, ∑ y in Vset V \ s, f x y
 
-class flow [fintype V] :=
-  (f : V -> V -> ℝ)
-  (fn : flow_network V)
-  (non_neg_flow : ∀ u v : V, f u v ≥ 0)
-  (no_overflow : ∀ u v : V, f u v ≤ capacity u v)
-  (conservation : ∀ v : V, 
-                  v ∈ Vset V \ {source, sink} → 
-                  mk_out V f {v} = mk_in V f {v})
+--class flow [fintype] :=
+--  (fn : flow_network)
 
--- flow f fn false false false
 
 class active_flow_network [fintype V]
-  extends flow_network V :=
+  :=
+  (network : flow_network V)
   (f : V -> V -> ℝ)
   (non_neg_flow : ∀ u v : V, f u v ≥ 0)
-  (no_overflow : ∀ u v : V, f u v ≤ capacity u v)
+  (no_overflow : ∀ u v : V, f u v ≤ capacity.c u v)
   (conservation : ∀ v : V, 
-                  v ∈ Vset V \ {source, sink} → 
+                  v ∈ Vset V \ {network.source, network.sink} →
                   mk_out V f {v} = mk_in V f {v})
 
 noncomputable def F_value [fintype V] : active_flow_network V -> ℝ
-:= λ N, mk_out V N.f {N.sink} - mk_in V N.f {N.sink}
+:= λ N, mk_out V N.f {N.network.sink} - mk_in V N.f {N.network.sink}
 
 --def make_cut [fintype V] : flow_network V -> (V -> Prop) -> Prop
 --:= λ N f, 
 
 class cut [fintype V]
-  extends flow_network V :=
+  :=
+  (network : flow_network V)
   (S : finset V)
   (T : finset V)
   (disjoint : S ∩ T = ∅)
   (fill : S ∪ T = Vset V)
 
 noncomputable def cut_value [fintype V] : cut V -> ℝ
-:= λ N, mk_out V N.capacity N.S
+:= λ N, mk_out V N.network.c N.S
 
 
 lemma lemma_1 [fintype V] (afn : active_flow_network V) (S : finset V) : 
-S ⊂ Vset V \ {afn.source, afn.sink} -> mk_in V afn.f S = mk_out V afn.f S
+S ⊂ Vset V \ {afn.network.source, afn.network.sink} -> mk_in V afn.f S = mk_out V afn.f S
 :=
 begin
   sorry
 end
 
-lemma lemma_2 [fintype V] (afn : active_flow_network V) (ct : cut V): F_value V afn ≤ cut_value V ct :=
+lemma lemma_2 [fintype V] (afn : active_flow_network V) (ct : cut V):
+  afn.network = ct.network → F_value V afn ≤ cut_value V ct :=
 begin
   sorry
 end
 
-def is_max_flow [fintype V] (fn: flow_network V) (f: ):  
---lemma superlemma_1 [fintype V] (afn : active_flow_network V) (ct : cut V):
+def is_max_flow_network [fintype V] (fn: active_flow_network V) : Prop
+:= ∀ fn' : active_flow_network V, fn.network = fn'.network → F_value V fn ≥ F_value V fn'
+
+def is_min_cut [fintype V] (fn: cut V) : Prop
+:= ∀ fn' : cut V, fn.network = fn'.network → cut_value V fn ≤ cut_value V fn'
 
 -- open_locale classical
 -- noncomputable def mk_in : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)

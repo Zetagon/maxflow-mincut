@@ -102,15 +102,24 @@ lemma superlemma_1 [fintype V] (afn : active_flow_network V) (ct : cut V) :
 
 
 structure residual_network [fintype V]
-  extends quiver V :=
+  :=
+  (f : V -> V -> ℝ)
   (source : V)
   (sink : V)
 
+noncomputable
 def mk_cf [fintype V] : active_flow_network V -> V -> V -> ℝ
 := λ n u v,
   if  u ⟶ v
-  then n.network.c  u v
-  else _
+  then n.network.c  u v - n.f u v
+  else if v ⟶ u
+       then n.f v u
+       else 0
+
+noncomputable
+def mk_residual_network [fintype V] : active_flow_network V -> residual_network V
+:= λ afn,
+   ⟨mk_cf V afn, afn.network.source, afn.network.sink⟩
 
 -- open_locale classical
 -- noncomputable def mk_in : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)

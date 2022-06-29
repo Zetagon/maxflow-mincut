@@ -9,19 +9,23 @@ open_locale classical
 universes u
 
 variable V : Type u
+-- variable hom' : V -> V -> Prop
 
+def hom' : V -> V -> Prop := λ u v, true
+
+@[instance] def V.quiver : quiver V :=
+  { hom :=  hom' V}
 
 structure digraph [fintype V]
-  extends quiver V
   :=
-  (hnonsymmetric : ∀ u v : V, ¬ (hom u v ∧ hom v u))
+  (hnonsymmetric : ∀ u v : V, ¬ ((u ⟶ v) ∧ (v ⟶ u)))
 
 
 structure capacity [fintype V]
   extends digraph V:=
   (c : V -> V -> ℝ)
   (non_neg_capacity : ∀ u v : V, c u v ≥ 0)
-  (vanishes : ∀ u v : V, ¬ (hom u v) → c u v = 0)
+  (vanishes : ∀ u v : V, ¬ (u ⟶ v) → c u v = 0)
 
 structure flow_network [fintype V]
   extends capacity V :=
@@ -104,7 +108,9 @@ structure residual_network [fintype V]
 
 def mk_cf [fintype V] : active_flow_network V -> V -> V -> ℝ
 := λ n u v,
-  if @capacity.c V _ _  = 3 then
+  if  u ⟶ v
+  then n.network.c  u v
+  else _
 
 -- open_locale classical
 -- noncomputable def mk_in : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)

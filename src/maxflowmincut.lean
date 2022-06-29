@@ -88,6 +88,13 @@ def is_max_flow_network [fintype V] (fn: active_flow_network V) : Prop
 def is_min_cut [fintype V] (fn: cut V) : Prop
 := ∀ fn' : cut V, fn.network = fn'.network → cut_value V fn ≤ cut_value V fn'
 
+
+lemma superlemma_1 [fintype V] (afn : active_flow_network V) (ct : cut V) :
+  afn.network = ct.network -> cut_value V ct = F_value V afn -> is_max_flow_network V afn ∧ is_min_cut V ct
+  :=
+  begin
+  sorry
+  end
 -- open_locale classical
 -- noncomputable def mk_in : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)
 -- | ⟨v, e, hsubset, hnonsymm⟩ f  := λs,  ∑ u in s, ∑ u' in (v \ s), f (u, u')--∑ e' in (v \ s) × s, f(e')--∑ u in (v \ s)

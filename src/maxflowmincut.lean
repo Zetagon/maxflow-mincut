@@ -95,6 +95,17 @@ lemma superlemma_1 [fintype V] (afn : active_flow_network V) (ct : cut V) :
   begin
   sorry
   end
+
+
+class residual_network [fintype V]
+  extends quiver V :=
+  (source : V)
+  (sink : V)
+
+def mk_cf [fintype V] : active_flow_network V -> V -> V -> ℝ
+:= λ n u v,
+  if @capacity.c V _ _  = 3 then
+
 -- open_locale classical
 -- noncomputable def mk_in : (digraph α) -> (α × α -> ℝ) -> (V -> ℝ)
 -- | ⟨v, e, hsubset, hnonsymm⟩ f  := λs,  ∑ u in s, ∑ u' in (v \ s), f (u, u')--∑ e' in (v \ s) × s, f(e')--∑ u in (v \ s)

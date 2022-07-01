@@ -4,6 +4,7 @@ import tactic
 import data.finset
 open set
 open quiver
+open finset
 
 open_locale big_operators
 open_locale classical
@@ -60,12 +61,57 @@ def cut_value {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
 := mk_out c.network.c c.S
 
 
+lemma foobar { a b : ℝ } : a + - b = a - b := rfl
+
+lemma mk_in_single_node { V : Type* } [fintype V] (p : V) (f : V -> V -> ℝ) :
+            mk_in f {p} = ∑ v in finset.univ \ {p}, f v p :=
+  begin
+    sorry
+  end
+
+lemma mk_out_single_node { V : Type* } [fintype V] {s : finset V} {f : V -> V -> ℝ} :
+            mk_out f s = ∑ u in finset.univ, ∑ v in finset.univ \ s, f u v :=
+      by simp only [mk_out]
+
+notation ` V' ` := univ
+
 lemma lemma_1 {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
   (afn : active_flow_network V) (S : finset V) :
 S ⊂ finset.univ \ {afn.network.source, afn.network.sink} -> mk_in afn.f S = mk_out afn.f S
 :=
 begin
-  sorry
+  intro hin,
+  rw ← add_left_inj (- mk_out afn.f S),
+  simp only [add_right_neg],
+  rw ← add_zero (mk_in afn.f S),
+  nth_rewrite 0 ← add_neg_self (∑ u in S, (∑ v in S, afn.f u v)),
+  rw ← add_assoc,
+  have tmp : mk_in afn.f S + ∑ (u : V) in S, ∑ (v : V) in S, afn.f u v =
+             ∑ u in S, ∑ v in finset.univ, afn.f v u
+             := by sorry,
+
+  have tmp2: (-∑ (u : V) in S, ∑ (v : V) in S, afn.f u v) + -mk_out afn.f S =
+             - ∑ u in S, ∑ v in finset.univ, afn.f u v
+             := by sorry,
+  rw tmp,
+  rw add_assoc,
+  rw tmp2,
+  clear tmp tmp2,
+  have foo : ∑ (u : V) in S, ∑ (v : V) in V' \ S,
+               afn.f v u
+             -
+             ∑ (u : V) in S,
+                ∑ (v : V) in V' \ S, afn.f u v
+           =
+             ∑ (u : V) in S,
+               (∑ (v : V), afn.f v u - ∑ (v : V), afn.f u v ) :=
+      begin
+        rw ← @sum_sub_distrib _ _ S (λ u, ∑ (v : V) in V' \S, afn.f v u) (λ u, ∑ (v : V), afn.f u v) _,
+      end,
+
+  rw foobar,
+  rw foo,
+  rw ← mk_in_single_node u afn.f,
 end
 
 lemma lemma_2  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]

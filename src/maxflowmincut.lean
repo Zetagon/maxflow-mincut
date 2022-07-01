@@ -7,15 +7,6 @@ open quiver
 
 open_locale big_operators
 open_locale classical
-universes u
-
--- variable hom' : V -> V -> Prop
-
-
-
--- -- TODO this should not be concrete
--- -- How can we remove this concrete definition?
-
 
 structure strange_digraph (V : Type*) [quiver.{0} V] :=
   (hnonsymmetric : ∀ u v : V, ¬ ((u ⟶ v) ∧ (v ⟶ u)))
@@ -54,9 +45,6 @@ structure active_flow_network (V : Type*) [quiver.{0} V] [fintype V]
 noncomputable def F_value {V : Type*} [quiver.{0} V] [fintype V] :
                   active_flow_network V -> ℝ
 := λ N, mk_out N.f {N.network.sink} - mk_in N.f {N.network.sink}
-
---def make_cut [fintype V] : flow_network V -> (V -> Prop) -> Prop
---:= λ N f, 
 
 structure cut (V : Type*) [quiver.{0} V] [fintype V]
   :=
@@ -127,10 +115,3 @@ def mk_residual_network {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
   (afn : active_flow_network V)
   : residual_network
   := ⟨mk_cf afn, afn.network.source, afn.network.sink⟩
-
--- open_locale classical
--- noncomputable def mk_in : (strange_digraph α) -> (α × α -> ℝ) -> (V -> ℝ)
--- | ⟨v, e, hsubset, hnonsymm⟩ f  := λs,  ∑ u in s, ∑ u' in (v \ s), f (u, u')--∑ e' in (v \ s) × s, f(e')--∑ u in (v \ s)
-
--- def mk_out : (strange_digraph α) -> (α × α -> ℝ) -> (V -> ℝ)
--- | ⟨v, e, hsubset, hnonsymm⟩ f  := λs,  sorry--∑ e' in (v \ s) × s, f(e')--∑ u in s, ∑ u' in (v \ s), f (u, u')

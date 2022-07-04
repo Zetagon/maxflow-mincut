@@ -26,11 +26,11 @@ structure flow_network (V : Type*) [quiver.{0} V]
 
 noncomputable def mk_in {V : Type* } [inst : fintype V]
   (f : V -> V -> ℝ) (s : finset V) : ℝ
-  := ∑ x in finset.univ \ s, ∑ y in finset.univ, f x y
+  := ∑ x in finset.univ \ s, ∑ y in s, f x y
 
 noncomputable def mk_out {V : Type* } [inst : fintype V]
   (f : V -> V -> ℝ) (s : finset V) : ℝ
-  := ∑ x in finset.univ, ∑ y in finset.univ \ s, f x y
+  := ∑ x in s, ∑ y in finset.univ \ s, f x y
 
 
 structure active_flow_network (V : Type*) [quiver.{0} V] [fintype V]

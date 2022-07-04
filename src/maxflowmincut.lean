@@ -112,9 +112,21 @@ end
 
 notation ` V' ` := univ
 
+lemma break_out_neg (a b : ℝ) : (-a) + -(b) = -(a + b) :=
+by ring
+
+noncomputable
+def tmp_f {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+  (afn : active_flow_network V) (x : V) : ℝ
+:= (mk_out afn.f {x} - mk_in afn.f {x})
+
+def tmp_zero {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+  (afn : active_flow_network V) (x : V) : ℝ
+:= 0
+
 lemma lemma_1 {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
   (afn : active_flow_network V) (S : finset V) :
-S ⊂ finset.univ \ {afn.network.source, afn.network.sink} -> mk_in afn.f S = mk_out afn.f S
+S ⊆ finset.univ \ {afn.network.source, afn.network.sink} -> mk_in afn.f S = mk_out afn.f S
 :=
 begin
   intro hin,
@@ -123,32 +135,38 @@ begin
   rw ← add_zero (mk_in afn.f S),
   nth_rewrite 0 ← add_neg_self (∑ u in S, (∑ v in S, afn.f u v)),
   rw ← add_assoc,
-  have tmp : mk_in afn.f S + ∑ (u : V) in S, ∑ (v : V) in S, afn.f u v =
-             ∑ u in S, ∑ v in finset.univ, afn.f v u
+  have tmp : mk_in afn.f S + ∑ u in S, ∑ v in S, afn.f u v =
+             ∑ u in S, ∑ v in finset.univ, afn.f u v
              := by sorry,
 
-  have tmp2: (-∑ (u : V) in S, ∑ (v : V) in S, afn.f u v) + -mk_out afn.f S =
-             - ∑ u in S, ∑ v in finset.univ, afn.f u v
+  have tmp2: mk_out afn.f S + (∑ u in S, ∑ v in S, afn.f u v) =
+             ∑ u in S, ∑ v in finset.univ, afn.f v u
              := by sorry,
   rw tmp,
   rw add_assoc,
+  rw break_out_neg,
+  nth_rewrite 1 add_comm,
   rw tmp2,
   clear tmp tmp2,
-  have foo : ∑ (u : V) in S, ∑ (v : V) in V' \ S,
-               afn.f v u
-             -
-             ∑ (u : V) in S,
-                ∑ (v : V) in V' \ S, afn.f u v
-           =
-             ∑ (u : V) in S,
-               (∑ (v : V), afn.f v u - ∑ (v : V), afn.f u v ) :=
-      begin
-        rw ← @sum_sub_distrib _ _ S (λ u, ∑ (v : V) in V' \S, afn.f v u) (λ u, ∑ (v : V), afn.f u v) _,
-      end,
-
   rw foobar,
+  rw ← @sum_sub_distrib _ _ S _ _ _,
+  simp only [mk_in_single_node', mk_out_single_node'],
+  -- have f := λ x, (mk_out afn.f {x} - mk_in afn.f {x}),
+  have hseq : S = S := rfl,
+  have h : ∀ (x : V), x ∈ S -> tmp_f afn x = tmp_zero afn x :=
+  begin
+    intros x hx,
+    unfold tmp_f,
+    unfold tmp_zero,
+    rw afn.conservation x,
+    { ring, },
+    { exact finset.mem_of_subset hin hx,}
+  end,
+  have foo := finset.sum_congr hseq h,
+  unfold tmp_f at foo,
   rw foo,
-  rw ← mk_in_single_node u afn.f,
+  unfold tmp_zero,
+  simp,
 end
 
 lemma lemma_2  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]

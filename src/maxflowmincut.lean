@@ -63,15 +63,52 @@ def cut_value {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
 
 lemma foobar { a b : ℝ } : a + - b = a - b := rfl
 
-lemma mk_in_single_node { V : Type* } [fintype V] (p : V) (f : V -> V -> ℝ) :
-            mk_in f {p} = ∑ v in finset.univ \ {p}, f v p :=
+lemma f_zero_zero {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+  (afn : active_flow_network V) (x : V) : afn.f x x = 0 :=
+begin
+ have hnonsymm : _ := afn.network.hnonsymmetric x x,
+ have hvanish: _ := afn.network.vanishes x x,
+ simp only [not_and, imp_not_self] at hnonsymm,
+ have hnon_edge := hnonsymm, clear hnonsymm,
+ have hcapacity_zero := hvanish hnon_edge,
+ have hno_overflow := afn.no_overflow x x,
+ rw hcapacity_zero at hno_overflow,
+ have hnon_neg_flow := afn.non_neg_flow x x,
+ linarith,
+end
+
+
+lemma mk_in_single_node { V : Type* } [inst : quiver.{0} V] [fintype V]
+  (p : V) (afn : active_flow_network V) :
+  mk_in (afn.f) {p} = ∑ v in finset.univ, (afn.f) v p :=
   begin
-    sorry
+      rw @sum_eq_sum_diff_singleton_add _ _ _ _ univ p (by simp) (λ x, afn.f x p),
+      have foo : (λ (x : V), afn.f x p) p = afn.f p p := rfl,
+      simp only [congr_fun],
+      rw f_zero_zero afn p,
+      have bar : ∑ (x : V) in univ \ {p}, afn.f x p + 0 = (λp', ∑ (x : V) in univ \ {p'}, afn.f x p' ) p
+      := by simp,
+      rw bar, clear bar,
+      rw ← @finset.sum_singleton _ _ p (λp', ∑ (x : V) in univ \ {p'}, afn.f x p' ) _,
+      simp [mk_in],
   end
 
-lemma mk_out_single_node { V : Type* } [fintype V] {s : finset V} {f : V -> V -> ℝ} :
-            mk_out f s = ∑ u in finset.univ, ∑ v in finset.univ \ s, f u v :=
-      by simp only [mk_out]
+@[simp] lemma mk_in_single_node' { V : Type* } [inst : quiver.{0} V] [fintype V]
+  (p : V) (afn : active_flow_network V) :
+  ∑ v in finset.univ, (afn.f) v p = mk_in (afn.f) {p} :=
+  by rw mk_in_single_node
+
+lemma mk_out_single_node { V : Type* } [quiver.{0} V] [fintype V]
+  (p : V) (afn : active_flow_network V) :
+  mk_out afn.f {p} = ∑ v in finset.univ, (afn.f) p v :=
+begin
+  sorry,
+end
+
+@[simp] lemma mk_out_single_node' { V : Type* } [quiver.{0} V] [fintype V]
+  (p : V) (afn : active_flow_network V) :
+  ∑ v in finset.univ, (afn.f) p v = mk_out afn.f {p} :=
+  by rw mk_out_single_node
 
 notation ` V' ` := univ
 

@@ -169,6 +169,16 @@ begin
   simp,
 end
 
+lemma out_in_disjunct {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+  (afn : active_flow_network V) (S T : finset V) (disjunct : ∀ (x : V), x ∈ S → x ∉ T ) :
+  mk_out afn.f (S ∪ T) - mk_in afn.f (S ∪ T) = mk_out afn.f S + mk_out afn.f T - mk_in afn.f S - mk_in afn.f T :=
+begin
+  -- simp only [mk_in, mk_out],
+  -- rw ← disj_union_eq_union S T disjunct,
+  -- rw finset.sum_disj_union disjunct,
+  sorry,
+end
+
 lemma lemma_2  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V):
   afn.network = ct.network → F_value afn ≤ cut_value ct :=

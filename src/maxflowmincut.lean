@@ -2,9 +2,9 @@ import data.real.basic
 import data.set
 import tactic
 import data.finset
-open set
 open quiver
 open finset
+
 
 open_locale big_operators
 open_locale classical
@@ -173,9 +173,64 @@ lemma out_in_disjunct {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
   (afn : active_flow_network V) (S T : finset V) (disjunct : ∀ (x : V), x ∈ S → x ∉ T ) :
   mk_out afn.f (S ∪ T) - mk_in afn.f (S ∪ T) = mk_out afn.f S + mk_out afn.f T - mk_in afn.f S - mk_in afn.f T :=
 begin
+  have foo : mk_out afn.f (S ∪ T) + ∑ u in S, ∑ v in T, afn.f u v + ∑ u in T, ∑ v in S, afn.f u v
+             =
+             mk_out afn.f S + mk_out afn.f T
+  :=
+  begin
+    have mk_out1 : mk_out afn.f S = ∑ (x : V) in S, ∑ (y : V) in univ \ S, afn.f x y := rfl,
+    have mk_out2 : mk_out afn.f T = ∑ (x : V) in T, ∑ (y : V) in univ \ T, afn.f x y := rfl,
+    unfold1 mk_out,
+    rw ← mk_out1,
+    rw ← mk_out2,
+    clear mk_out1,
+    clear mk_out2,
+    rw ← disj_union_eq_union S T disjunct,
+    rw finset.sum_disj_union disjunct,
+    have foo : ∀ (x : V), x ∈ univ \ S.disj_union T disjunct → x ∉ T := sorry,
+    have bar : ∀ (x : V), x ∈ univ \ S.disj_union T disjunct → x ∉ S := sorry,
+    exact calc
+     ∑ (x : V) in S, ∑ (y : V) in V' \ S.disj_union T disjunct, afn.f x y +
+               ∑ (x : V) in T, ∑ (y : V) in V' \ S.disj_union T disjunct, afn.f x y +
+               ∑ (u : V) in S, ∑ (v : V) in T, afn.f u v +
+               ∑ (u : V) in T, ∑ (v : V) in S, afn.f u v
+               =
+               ∑ (x : V) in S, ∑ (y : V) in V' \ S.disj_union T disjunct, afn.f x y +
+               ∑ (u : V) in S, ∑ (v : V) in T, afn.f u v +
+               (∑ (x : V) in T, ∑ (y : V) in V' \ S.disj_union T disjunct, afn.f x y +
+                ∑ (u : V) in T, ∑ (v : V) in S, afn.f u v) : by linarith
+         ... = ∑ (u : V) in S, (∑ (v : V) in (V' \ S.disj_union T disjunct), afn.f u v +
+                                ∑ v in T, afn.f u v) +
+               (∑ (u : V) in T, (∑ (v : V) in V' \ S.disj_union T disjunct, afn.f u v +
+                                 ∑ (v : V) in S, afn.f u v)) : begin  rw ← sum_add_distrib, rw ← sum_add_distrib,  end
+           ... = ∑ (u : V) in S, (∑ (v : V) in (V' \ S.disj_union T disjunct).disj_union T foo, afn.f u v) +
+               (∑ (u : V) in T, (∑ (v : V) in (V' \ S.disj_union T disjunct).disj_union S bar, afn.f u v +
+                                 ∑ (v : V) in S, afn.f u v))  :
+               begin
+                 simp_rw ← finset.sum_disj_union foo,
+                 simp_rw ← finset.sum_disj_union foo,
+               end
+           ... = mk_out afn.f S + mk_out afn.f T : sorry,
+    -- rw tmp, clear tmp,
+    -- have tmp : ∑ (x : V) in S, (∑ (y : V) in V' \ S.disj_union T disjunct, afn.f x y + ∑ (v : V) in T, afn.f x v) +
+    --            (∑ (x : V) in T, ∑ (y : V) in V' \ S.disj_union T disjunct, afn.f x y +
+    --             ∑ (u : V) in T, ∑ (v : V) in S, afn.f u v)
+    --            =
+    --            ∑ (x : V) in S, (∑ (y : V) in (V' \ S.disj_union T disjunct).disj_union T foo, afn.f x y) +
+    --            (∑ (x : V) in T, ∑ (y : V) in V' \ S.disj_union T disjunct, afn.f x y +
+    --             ∑ (u : V) in T, ∑ (v : V) in S, afn.f u v) :=
+    -- begin
+
+    -- end,
+    -- rw ← sum_add_distrib,
+    -- rw ← finset.sum_disj_union foo,
+  end,
+
   -- simp only [mk_in, mk_out],
   -- rw ← disj_union_eq_union S T disjunct,
   -- rw finset.sum_disj_union disjunct,
+
+
   sorry,
 end
 

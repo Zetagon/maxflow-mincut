@@ -179,10 +179,52 @@ begin
   sorry,
 end
 
-lemma lemma_2  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma out_as_in {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+  (afn : active_flow_network V) (S : finset V): 
+  mk_out afn.f S = mk_in afn.f (univ \ S) := --Perhaps reconsider univ
+  begin
+    rw mk_out,
+    rw mk_in, 
+    rw sum_comm,
+    rw sum_comm,
+    have foo: S = univ \ (univ \ S):=
+    begin
+      simp only [sdiff_sdiff_right_self, finset.inf_eq_inter, finset.univ_inter],
+    end,
+    nth_rewrite 0 foo,
+  end
+
+lemma in_as_out {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+(afn : active_flow_network V) (S : finset V): 
+  mk_in afn.f S = mk_out afn.f (univ \ S) := 
+  begin  
+    have foo: S = univ \ (univ \ S):= --This occurs in the previous lemma.
+    begin
+      simp only [sdiff_sdiff_right_self, finset.inf_eq_inter, finset.univ_inter],
+    end,
+    nth_rewrite 0 foo,
+    rw out_as_in,
+  end
+
+
+lemma flow_value_global_ver {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+  (afn : active_flow_network V) (ct : cut V): 
+  mk_out afn.f {afn.network.source} - mk_in afn.f {afn.network.source} = mk_out afn.f ct.S - mk_in afn.f ct.S:=
+  begin
+    sorry
+  end
+
+lemma outFlow_leq_outCut {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+  (afn : active_flow_network V) (S : finset V) : mk_out afn.f S ≤ mk_out afn.network.c S
+  :=
+  begin
+    sorry
+  end
+
+lemma flow_leq_cut {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V):
   afn.network = ct.network → F_value afn ≤ cut_value ct :=
-begin
+begin 
   sorry
 end
 
@@ -196,11 +238,11 @@ def is_min_cut {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
 
 
 lemma superlemma_1  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
-  (afn : active_flow_network V) (ct : cut V) :
-  afn.network = ct.network -> cut_value ct = F_value afn -> is_max_flow_network afn ∧ is_min_cut ct
+  (afn : active_flow_network V) (ct : cut V) (hsame_network: afn.network = ct.network):
+  cut_value ct = F_value afn -> is_max_flow_network afn ∧ is_min_cut ct
   :=
   begin
-  sorry
+    sorry
   end
 
 

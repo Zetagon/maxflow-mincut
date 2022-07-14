@@ -325,6 +325,10 @@ structure residual_network  (V : Type*)  [inst' : fintype V]
   (h : ∀ u v : V, is_edge u v  == (f' u v > 0) )
 
 
+inductive path {V : Type* } (is_edge : V -> V -> Prop) (a : V) : V → Sort*
+| nil  : path a
+| cons : Π {b c : V}, path b → (is_edge b c) → path c
+
 -- @[instance] def foobarbaz {V : Type*} [inst : quiver.{0} V] [inst' : fintype V] [inst'' : has_singleton V (quiver (resnet V))]
 --   (afn : active_flow_network V)
 --   : quiver (resnet V) :=
@@ -339,9 +343,13 @@ structure residual_network  (V : Type*)  [inst' : fintype V]
 --   : residual_network V
 --   := ⟨mk_cf afn, afn.network.source, afn.network.sink⟩
 
--- def is_augumenting_path {V : Type*} [inst : quiver.{0} V] [inst' : fintype V] {s t : V}
---   (rsn : residual_network V ) (p : quiver.path s t) : rsn.source = s ∧ rsn.sink = t
---   :=
--- begin
---   sorry
--- end
+lemma superlemma2 {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V) (p : path rsn.is_edge rsn.afn.network.source rsn.afn.network.sink)
+  : ¬ is_max_flow_network rsn.afn
+:= sorry
+
+lemma superlemma3 {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V)
+  (hno_augumenting_path : ∀ s t : V, path rsn.is_edge s t → ¬(s = rsn.afn.network.source ∧ t = rsn.afn.network.sink))
+  : (∃c : cut V, cut_value c = F_value rsn.afn)
+:= sorry

@@ -2,38 +2,42 @@ import data.real.basic
 import data.set
 import tactic
 import data.finset
-open quiver
 open finset
 
 
 open_locale big_operators
 open_locale classical
 
-structure strange_digraph (V : Type*) [quiver.{0} V] :=
-  (hnonsymmetric : ∀ u v : V, ¬ ((u ⟶ v) ∧ (v ⟶ u)))
+structure strange_digraph (V : Type*)  :=
+  (is_edge : V → V → Prop)
+  (hnonsymmetric : ∀ u v : V, ¬ ((is_edge u v) ∧ (is_edge v u)))
+
+infixr ` ⇉ `:10 := strange_digraph.is_edge -- type as \h
 
 
-structure capacity (V : Type*) [quiver.{0} V]
+structure capacity (V : Type*)
   extends strange_digraph V:=
   (c : V -> V -> ℝ)
   (non_neg_capacity : ∀ u v : V, c u v ≥ 0)
-  (vanishes : ∀ u v : V, ¬ (u ⟶ v) → c u v = 0)
+  (vanishes : ∀ u v : V, ¬ (is_edge u v) → c u v = 0)
 
-structure flow_network (V : Type*) [quiver.{0} V]
+structure flow_network (V : Type*)
   extends capacity V :=
   (source : V)
   (sink : V)
 
-noncomputable def mk_in {V : Type* } [inst : fintype V]
+noncomputable
+def mk_in {V : Type* } [inst : fintype V]
   (f : V -> V -> ℝ) (s : finset V) : ℝ
   := ∑ x in finset.univ \ s, ∑ y in s, f x y
 
-noncomputable def mk_out {V : Type* } [inst : fintype V]
+noncomputable
+def mk_out {V : Type* } [inst : fintype V]
   (f : V -> V -> ℝ) (s : finset V) : ℝ
   := ∑ x in s, ∑ y in finset.univ \ s, f x y
 
 
-structure active_flow_network (V : Type*) [quiver.{0} V] [fintype V]
+structure active_flow_network (V : Type*)  [fintype V]
   :=
   (network : flow_network V)
   (f : V -> V -> ℝ)
@@ -43,11 +47,11 @@ structure active_flow_network (V : Type*) [quiver.{0} V] [fintype V]
                   v ∈ (finset.univ : finset V) \ {network.source, network.sink} →
                   mk_out f {v} = mk_in f {v})
 
-noncomputable def F_value {V : Type*} [quiver.{0} V] [fintype V] :
+noncomputable def F_value {V : Type*}  [fintype V] :
                   active_flow_network V -> ℝ
 := λ N, mk_out N.f {N.network.sink} - mk_in N.f {N.network.sink}
 
-structure cut (V : Type*) [quiver.{0} V] [fintype V]
+structure cut (V : Type*)  [fintype V]
   :=
   (network : flow_network V)
   (S : finset V)
@@ -56,14 +60,14 @@ structure cut (V : Type*) [quiver.{0} V] [fintype V]
   (fill : S ∪ T = finset.univ)
 
 noncomputable
-def cut_value {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+def cut_value {V : Type*}  [inst' : fintype V]
     (c : cut V) : ℝ
 := mk_out c.network.c c.S
 
 
 lemma foobar { a b : ℝ } : a + - b = a - b := rfl
 
-lemma f_zero_zero {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma f_zero_zero {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (x : V) : afn.f x x = 0 :=
 begin
  have hnonsymm : _ := afn.network.hnonsymmetric x x,
@@ -78,7 +82,7 @@ begin
 end
 
 
-lemma mk_in_single_node { V : Type* } [inst : quiver.{0} V] [fintype V]
+lemma mk_in_single_node { V : Type* }  [fintype V]
   (p : V) (afn : active_flow_network V) :
   mk_in (afn.f) {p} = ∑ v in finset.univ, (afn.f) v p :=
   begin
@@ -93,19 +97,19 @@ lemma mk_in_single_node { V : Type* } [inst : quiver.{0} V] [fintype V]
       simp [mk_in],
   end
 
-@[simp] lemma mk_in_single_node' { V : Type* } [inst : quiver.{0} V] [fintype V]
+@[simp] lemma mk_in_single_node' { V : Type* }  [fintype V]
   (p : V) (afn : active_flow_network V) :
   ∑ v in finset.univ, (afn.f) v p = mk_in (afn.f) {p} :=
   by rw mk_in_single_node
 
-lemma mk_out_single_node { V : Type* } [quiver.{0} V] [fintype V]
+lemma mk_out_single_node { V : Type* }  [fintype V]
   (p : V) (afn : active_flow_network V) :
   mk_out afn.f {p} = ∑ v in finset.univ, (afn.f) p v :=
 begin
   sorry,
 end
 
-@[simp] lemma mk_out_single_node' { V : Type* } [quiver.{0} V] [fintype V]
+@[simp] lemma mk_out_single_node' { V : Type* }  [fintype V]
   (p : V) (afn : active_flow_network V) :
   ∑ v in finset.univ, (afn.f) p v = mk_out afn.f {p} :=
   by rw mk_out_single_node
@@ -116,15 +120,15 @@ lemma break_out_neg (a b : ℝ) : (-a) + -(b) = -(a + b) :=
 by ring
 
 noncomputable
-def tmp_f {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+def tmp_f {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (x : V) : ℝ
 := (mk_out afn.f {x} - mk_in afn.f {x})
 
-def tmp_zero {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+def tmp_zero {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (x : V) : ℝ
 := 0
 
-lemma lemma_1 {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma lemma_1 {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (S : finset V) :
 S ⊆ finset.univ \ {afn.network.source, afn.network.sink} -> mk_in afn.f S = mk_out afn.f S
 :=
@@ -169,7 +173,7 @@ begin
   simp,
 end
 
-lemma out_in_disjunct {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma out_in_disjunct {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (S T : finset V) (disjunct : ∀ (x : V), x ∈ S → x ∉ T ) :
   mk_out afn.f (S ∪ T) - mk_in afn.f (S ∪ T) = mk_out afn.f S + mk_out afn.f T - mk_in afn.f S - mk_in afn.f T :=
 begin
@@ -208,7 +212,8 @@ begin
                                  ∑ (v : V) in S, afn.f u v))  :
                begin
                  simp_rw ← finset.sum_disj_union foo,
-                 simp_rw ← finset.sum_disj_union foo,
+                 sorry,
+                 -- simp_rw ← finset.sum_disj_union foo,
                end
            ... = mk_out afn.f S + mk_out afn.f T : sorry,
     -- rw tmp, clear tmp,
@@ -234,7 +239,7 @@ begin
   sorry,
 end
 
-lemma out_as_in {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma out_as_in {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (S : finset V): 
   mk_out afn.f S = mk_in afn.f (univ \ S) := --Perhaps reconsider univ
   begin
@@ -249,7 +254,7 @@ lemma out_as_in {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
     nth_rewrite 0 foo,
   end
 
-lemma in_as_out {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma in_as_out {V : Type*}  [inst' : fintype V]
 (afn : active_flow_network V) (S : finset V): 
   mk_in afn.f S = mk_out afn.f (univ \ S) := 
   begin  
@@ -262,37 +267,37 @@ lemma in_as_out {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
   end
 
 
-lemma flow_value_global_ver {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma flow_value_global_ver {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V): 
   mk_out afn.f {afn.network.source} - mk_in afn.f {afn.network.source} = mk_out afn.f ct.S - mk_in afn.f ct.S:=
   begin
     sorry
   end
 
-lemma outFlow_leq_outCut {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma outFlow_leq_outCut {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (S : finset V) : mk_out afn.f S ≤ mk_out afn.network.c S
   :=
   begin
     sorry
   end
 
-lemma flow_leq_cut {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma flow_leq_cut {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V):
   afn.network = ct.network → F_value afn ≤ cut_value ct :=
 begin 
   sorry
 end
 
-def is_max_flow_network  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+def is_max_flow_network  {V : Type*}  [inst' : fintype V]
   (fn: active_flow_network V) : Prop
 := ∀ fn' : active_flow_network V, fn.network = fn'.network → F_value fn ≥ F_value fn'
 
-def is_min_cut {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+def is_min_cut {V : Type*}  [inst' : fintype V]
   (fn: cut V) : Prop
 := ∀ fn' : cut V, fn.network = fn'.network → cut_value fn ≤ cut_value fn'
 
 
-lemma superlemma_1  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+lemma superlemma_1  {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V) (hsame_network: afn.network = ct.network):
   cut_value ct = F_value afn -> is_max_flow_network afn ∧ is_min_cut ct
   :=
@@ -300,26 +305,43 @@ lemma superlemma_1  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
     sorry
   end
 
-
-structure residual_network  {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
-  :=
-  (f : V -> V -> ℝ)
-  (source : V)
-  (sink : V)
-
 noncomputable
-def mk_cf {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+def mk_cf {V : Type*}  [inst' : fintype V]
   (n : active_flow_network V)
   (u v : V)
   : ℝ
-:= if  u ⟶ v
+:= if  n.network.is_edge u v
    then n.network.c  u v - n.f u v
-   else if v ⟶ u
+   else if n.network.is_edge v u
         then n.f v u
         else 0
 
-noncomputable
-def mk_residual_network {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+structure residual_network  (V : Type*)  [inst' : fintype V]
+  :=
   (afn : active_flow_network V)
-  : residual_network
-  := ⟨mk_cf afn, afn.network.source, afn.network.sink⟩
+  (f' : V -> V -> ℝ)
+  (hdef : f' = mk_cf afn)
+  (is_edge : V -> V -> Prop)
+  (h : ∀ u v : V, is_edge u v  == (f' u v > 0) )
+
+
+-- @[instance] def foobarbaz {V : Type*} [inst : quiver.{0} V] [inst' : fintype V] [inst'' : has_singleton V (quiver (resnet V))]
+--   (afn : active_flow_network V)
+--   : quiver (resnet V) :=
+-- { hom =  λ u  v, mk_cf afn u v > 0 }
+
+
+
+
+-- noncomputable
+-- def mk_residual_network {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+--   (afn : active_flow_network V)
+--   : residual_network V
+--   := ⟨mk_cf afn, afn.network.source, afn.network.sink⟩
+
+-- def is_augumenting_path {V : Type*} [inst : quiver.{0} V] [inst' : fintype V] {s t : V}
+--   (rsn : residual_network V ) (p : quiver.path s t) : rsn.source = s ∧ rsn.sink = t
+--   :=
+-- begin
+--   sorry
+-- end

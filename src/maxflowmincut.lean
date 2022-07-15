@@ -56,14 +56,27 @@ structure cut (V : Type*)  [fintype V]
   (network : flow_network V)
   (S : finset V)
   (T : finset V)
-  (disjoint : S ∩ T = ∅)
-  (fill : S ∪ T = finset.univ)
+  (sins : network.source ∈ S)
+  (tint : network.sink ∈ T)
+  (Tcomp : T = univ \ S)
 
 noncomputable
 def cut_value {V : Type*}  [inst' : fintype V]
     (c : cut V) : ℝ
 := mk_out c.network.c c.S
 
+lemma x_not_in_s {V : Type*} [fintype V]
+  (c : cut V)  : ∀ x : V, x ∈ c.T -> x ∉ ({c.network.source} : finset V) :=
+begin
+  intros x hxinS,
+  cases c,
+  simp at *,
+  rw c_Tcomp at hxinS,
+  have foo : univ \ c_S ∩ c_S = ∅ := sdiff_inter_self c_S univ,
+  have foo : disjoint (univ \ c_S)  c_S  := sdiff_disjoint,
+  have bar : c_network.source ∈ c_S := c_sins,
+  exact disjoint_iff_ne.mp foo x hxinS c_network.source c_sins
+end
 
 lemma foobar { a b : ℝ } : a + - b = a - b := rfl
 
@@ -267,11 +280,64 @@ lemma in_as_out {V : Type*}  [inst' : fintype V]
   end
 
 
+
+lemma S_minus_s_eq_T_union_s {V : Type*}  [inst' : fintype V]
+  (afn : active_flow_network V) (ct : cut V):
+  V' \ (ct.S \ {afn.network.source}) = ct.T ∪ {afn.network.source} :=
+begin
+  rw sdiff_sdiff_right',
+  simp,
+  have fljlkoo : (V' \ ct.S) = ct.T :=
+  begin
+    rw cut.Tcomp,
+  end,
+  rw fljlkoo,
+end
+
 lemma flow_value_global_ver {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V): 
   mk_out afn.f {afn.network.source} - mk_in afn.f {afn.network.source} = mk_out afn.f ct.S - mk_in afn.f ct.S:=
   begin
-    sorry
+    set S := ct.S,
+    set T := ct.T,
+    set s := afn.network.source,
+    set t := afn.network.sink,
+    set f := afn.f,
+    have foo : mk_out f (S \ {s}) = mk_in f (T ∪ {s})
+    :=
+    begin
+      rw ← S_minus_s_eq_T_union_s,
+      exact out_as_in afn (S \ {s}),
+    end,
+    have bar : mk_in f (S \ {s}) = mk_out f (T ∪ {s})
+    :=
+    begin
+      rw ← S_minus_s_eq_T_union_s,
+      exact in_as_out afn (S \ {s}),
+    end,
+    have baz : 0 = mk_out f S + mk_in f {s} - mk_in f S - mk_out f {s} :=
+    calc 0 = mk_out f (S \ {s}) - mk_in f (S \ {s}) : sorry
+       ... = mk_in f (T ∪ {s}) - mk_out f (T ∪ {s}) :
+       begin
+         rw foo,
+         rw bar,
+       end
+       ... = - (mk_out f (T ∪ {s}) - mk_in f (T ∪ {s})) : (neg_sub (mk_out f (T ∪ {s})) (mk_in f (T ∪ {s}))).symm
+       ... = mk_in f T + mk_in f {s} - mk_out f T - mk_out f {s} :
+       begin
+         -- have disj : ∀ (x : V), x ∈ ct.T → x ∉ {s} :=
+         -- begin
+         --   -- intros x hxinT,
+         --   -- rw ct.Tcomp at hxinT,
+         --   sorry,
+         -- end,
+         -- have baz : T = ct.T := rfl,
+         -- have baz' : s = afn.network.source := rfl,
+         -- rw [ baz, baz' ],
+         rw out_in_disjunct afn T {s} (x_not_in_s ct),
+         ring,
+       end
+       ... = mk_out f S + mk_in f {s} - mk_in f S - mk_out f {s}  : sorry
   end
 
 lemma outFlow_leq_outCut {V : Type*}  [inst' : fintype V]
@@ -408,6 +474,23 @@ lemma superlemma3 {V : Type*} [inst' : fintype V]
   (hno_augumenting_path : no_augumenting_path rsn)
   : (∃c : cut V, cut_value c = F_value rsn.afn)
 := sorry
+
+-- lemma three_way_equiv (a b c : Prop) : (a -> b) -> (b -> c) -> (c -> a) -> ((a <-> b) ∧ (b <-> c) ∧ (c <-> a))
+-- :=
+-- begin
+--   intros hab hbc hca,
+--   split,
+--   {
+--     have foo := hca ∘ hbc,
+--     exact ⟨hab, foo⟩,
+--   },
+--   { split,
+--     {
+--       exact ⟨hbc, hab ∘ hca⟩
+--     },
+--     exact ⟨hca, hbc ∘ hab ⟩,
+--   }
+-- end
 
 theorem maxflow_mincut {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) :

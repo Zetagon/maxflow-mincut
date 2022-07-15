@@ -389,15 +389,47 @@ inductive path {V : Type* } (is_edge : V -> V -> Prop) (a : V) : V → Sort*
 --   (afn : active_flow_network V)
 --   : residual_network V
 --   := ⟨mk_cf afn, afn.network.source, afn.network.sink⟩
+def no_augumenting_path {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V) : Prop
+  := ∀ t : V, path rsn.is_edge rsn.afn.network.source t → ¬( t = rsn.afn.network.sink)
+
 
 lemma superlemma2 {V : Type*} [inst' : fintype V]
-  (rsn : residual_network V) (p : path rsn.is_edge rsn.afn.network.source rsn.afn.network.sink)
-  : ¬ is_max_flow_network rsn.afn
-:= sorry
+  (rsn : residual_network V)
+  : (is_max_flow_network rsn.afn) -> no_augumenting_path rsn
+:=
+begin
+sorry
+end
 
 lemma superlemma3 {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
-  (hno_augumenting_path : ∀ s t : V, path rsn.is_edge s t → ¬(s = rsn.afn.network.source ∧ t = rsn.afn.network.sink))
+  -- (hno_augumenting_path : ∀ s t : V, path rsn.is_edge s t → ¬(s = rsn.afn.network.source ∧ t = rsn.afn.network.sink))
+  (hno_augumenting_path : no_augumenting_path rsn)
   : (∃c : cut V, cut_value c = F_value rsn.afn)
 := sorry
 
+theorem maxflow_mincut {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V) :
+  (is_max_flow_network rsn.afn -> no_augumenting_path rsn) ∧
+  (no_augumenting_path rsn -> (∃c : cut V, cut_value c = F_value rsn.afn)) ∧
+  ((∃c : cut V, cut_value c = F_value rsn.afn ∧ c.network = rsn.afn.network) -> is_max_flow_network rsn.afn)
+:=
+begin
+split,
+{
+  exact superlemma2 rsn,
+},
+{
+  split,
+  { exact superlemma3 rsn },
+  {
+    intro c,
+    cases c with c heq,
+    cases heq with heq heq_network,
+    have foo := superlemma_1 rsn.afn c heq_network.symm heq,
+    exact foo.left,
+  }
+}
+
+end

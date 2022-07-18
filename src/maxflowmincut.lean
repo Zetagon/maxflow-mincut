@@ -294,8 +294,8 @@ lemma flow_leq_cap_global_ver {V : Type*}  [inst' : fintype V]
     sorry,
   end
 
-lemma sub_non_neg_ineq (x : ℝ) (y : ℝ) (y ≥ 0): x-y ≤ x
-:= begin simp only [sub_le_self_iff, nat.cast_nonneg] end
+lemma sub_non_neg_ineq (x : ℝ) (y : ℝ): y ≥ 0 -> x-y ≤ x
+:= begin simp only [sub_le_self_iff, imp_self] end
 
 lemma mk_in_non_neg {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (S : finset V): mk_in afn.f S ≥ 0
@@ -303,20 +303,7 @@ lemma mk_in_non_neg {V : Type*}  [inst' : fintype V]
   begin
     sorry
   end
-
-lemma mk_in_real {V : Type*}  [inst' : fintype V]
-  (afn : active_flow_network V) (S : finset V): (mk_in afn.f S) : ℝ
-  := 
-  begin
-    sorry
-  end
-
-lemma mk_out_real {V : Type*}  [inst' : fintype V]
-  (afn : active_flow_network V) (S : finset V): (mk_out afn.f S) : ℝ
-  := 
-  begin
-    sorry
-  end  
+ 
 
 lemma flow_leq_cut {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V) (same_net : afn.network = ct.network):
@@ -326,7 +313,7 @@ begin
   rw flow_value_global_ver afn ct,
   have foo: mk_out afn.f ct.S - mk_in afn.f ct.S ≤ mk_out afn.f ct.S :=
     begin
-      sorry
+      exact sub_non_neg_ineq (mk_out afn.f ct.S) (mk_in afn.f ct.S) (mk_in_non_neg afn ct.S),
     end,
   
   have bar: mk_out afn.f ct.S ≤ mk_out afn.network.c ct.S :=

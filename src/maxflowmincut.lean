@@ -294,8 +294,14 @@ begin
   rw fljlkoo,
 end
 
+lemma zero_left_move {a b c d : ℝ} : (0 = a + b - c - d) -> (d - b = a - c) :=
+begin
+  intro h,
+  linarith,
+end
 lemma flow_value_global_ver {V : Type*}  [inst' : fintype V]
-  (afn : active_flow_network V) (ct : cut V): 
+  (afn : active_flow_network V) (ct : cut V)
+  (h_equal_networks : afn.network = ct.network) :
   mk_out afn.f {afn.network.source} - mk_in afn.f {afn.network.source} = mk_out afn.f ct.S - mk_in afn.f ct.S:=
   begin
     set S := ct.S,
@@ -303,6 +309,8 @@ lemma flow_value_global_ver {V : Type*}  [inst' : fintype V]
     set s := afn.network.source,
     set t := afn.network.sink,
     set f := afn.f,
+    have hs : s = afn.network.source := rfl,
+    have hT : T = ct.T := rfl,
     have foo : mk_out f (S \ {s}) = mk_in f (T ∪ {s})
     :=
     begin
@@ -316,7 +324,14 @@ lemma flow_value_global_ver {V : Type*}  [inst' : fintype V]
       exact in_as_out afn (S \ {s}),
     end,
     have baz : 0 = mk_out f S + mk_in f {s} - mk_in f S - mk_out f {s} :=
-    calc 0 = mk_out f (S \ {s}) - mk_in f (S \ {s}) : sorry
+    calc 0 = mk_out f (S \ {s}) - mk_out f (S \ {s}) : (sub_self (mk_out f (S \ {s}))).symm
+       ... =  mk_out f (S \ {s}) - mk_in f (S \ {s}) :
+       begin
+         have baz : S \ {s} ⊆ V' \ {s, t} := begin
+           sorry
+         end,
+         rw lemma_1 afn (S \ {s}) baz,
+       end
        ... = mk_in f (T ∪ {s}) - mk_out f (T ∪ {s}) :
        begin
          rw foo,
@@ -325,19 +340,26 @@ lemma flow_value_global_ver {V : Type*}  [inst' : fintype V]
        ... = - (mk_out f (T ∪ {s}) - mk_in f (T ∪ {s})) : (neg_sub (mk_out f (T ∪ {s})) (mk_in f (T ∪ {s}))).symm
        ... = mk_in f T + mk_in f {s} - mk_out f T - mk_out f {s} :
        begin
-         -- have disj : ∀ (x : V), x ∈ ct.T → x ∉ {s} :=
-         -- begin
-         --   -- intros x hxinT,
-         --   -- rw ct.Tcomp at hxinT,
-         --   sorry,
-         -- end,
-         -- have baz : T = ct.T := rfl,
-         -- have baz' : s = afn.network.source := rfl,
-         -- rw [ baz, baz' ],
-         rw out_in_disjunct afn T {s} (x_not_in_s ct),
+         rw hs, rw hT,
+         have blurg := (x_not_in_s ct),
+         rw ← h_equal_networks at blurg,
+         rw out_in_disjunct afn ct.T {afn.network.source} blurg,
          ring,
        end
-       ... = mk_out f S + mk_in f {s} - mk_in f S - mk_out f {s}  : sorry
+       ... = mk_out f S + mk_in f {s} - mk_in f S - mk_out f {s}  :
+       begin
+         simp_rw [in_as_out, out_as_in],
+         simp,
+         rw ← ct.Tcomp,
+         simp,
+         have b : V' \ T = S :=
+         begin
+           rw [hT, ct.Tcomp],
+           simp,
+         end,
+         rw b,
+       end,
+       exact zero_left_move baz,
   end
 
 lemma outFlow_leq_outCut {V : Type*}  [inst' : fintype V]

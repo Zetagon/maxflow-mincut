@@ -49,7 +49,7 @@ structure active_flow_network (V : Type*)  [fintype V]
 
 noncomputable def F_value {V : Type*}  [fintype V] :
                   active_flow_network V -> ℝ
-:= λ N, mk_out N.f {N.network.sink} - mk_in N.f {N.network.sink}
+:= λ N, mk_out N.f {N.network.source} - mk_in N.f {N.network.source}
 
 structure cut (V : Type*)  [fintype V]
   :=
@@ -281,11 +281,64 @@ lemma outFlow_leq_outCut {V : Type*}  [inst' : fintype V]
     sorry
   end
 
+lemma major_sum {V : Type*} (X : finset V) (Y : finset V) (f : V → V → ℝ) (g : V → V → ℝ) (h : ∀ x : X , f x ≤ g x): 
+∑ (y : V) in Y, ∑ (x : V) in X, f x y ≤ ∑ (y : V) in Y, ∑ x : X, g x y:=
+  begin
+    sorry
+  end
+
+lemma flow_leq_cap_global_ver {V : Type*}  [inst' : fintype V]
+  (afn : active_flow_network V) (S : finset V): mk_out afn.f S ≤ mk_out afn.network.c S
+  := 
+  begin
+    sorry,
+  end
+
+lemma sub_non_neg_ineq (x : ℝ) (y : ℝ) (y ≥ 0): x-y ≤ x
+:= begin simp only [sub_le_self_iff, nat.cast_nonneg] end
+
+lemma mk_in_non_neg {V : Type*}  [inst' : fintype V]
+  (afn : active_flow_network V) (S : finset V): mk_in afn.f S ≥ 0
+  := 
+  begin
+    sorry
+  end
+
+lemma mk_in_real {V : Type*}  [inst' : fintype V]
+  (afn : active_flow_network V) (S : finset V): (mk_in afn.f S) : ℝ
+  := 
+  begin
+    sorry
+  end
+
+lemma mk_out_real {V : Type*}  [inst' : fintype V]
+  (afn : active_flow_network V) (S : finset V): (mk_out afn.f S) : ℝ
+  := 
+  begin
+    sorry
+  end  
+
 lemma flow_leq_cut {V : Type*}  [inst' : fintype V]
-  (afn : active_flow_network V) (ct : cut V):
-  afn.network = ct.network → F_value afn ≤ cut_value ct :=
+  (afn : active_flow_network V) (ct : cut V) (same_net : afn.network = ct.network):
+  F_value afn ≤ cut_value ct :=
 begin 
-  sorry
+  unfold F_value,
+  rw flow_value_global_ver afn ct,
+  have foo: mk_out afn.f ct.S - mk_in afn.f ct.S ≤ mk_out afn.f ct.S :=
+    begin
+      sorry
+    end,
+  
+  have bar: mk_out afn.f ct.S ≤ mk_out afn.network.c ct.S :=
+    begin
+      sorry
+    end,
+  
+  have blurg: mk_out afn.network.to_capacity.c ct.S = cut_value ct :=
+    begin
+      sorry,
+    end,
+  sorry,
 end
 
 def is_max_flow_network  {V : Type*}  [inst' : fintype V]
@@ -304,6 +357,13 @@ lemma superlemma_1  {V : Type*}  [inst' : fintype V]
   begin
     sorry
   end
+
+lemma imp_is_trans {p : Prop} {q : Prop} {r : Prop} (h_1: p → q) (h_2: q → r): (p → r)
+:= 
+begin
+  intro p,
+  exact h_2(h_1(p)),
+end
 
 noncomputable
 def mk_cf {V : Type*}  [inst' : fintype V]
@@ -353,3 +413,4 @@ lemma superlemma3 {V : Type*} [inst' : fintype V]
   (hno_augumenting_path : ∀ s t : V, path rsn.is_edge s t → ¬(s = rsn.afn.network.source ∧ t = rsn.afn.network.sink))
   : (∃c : cut V, cut_value c = F_value rsn.afn)
 := sorry
+

@@ -347,8 +347,8 @@ lemma outFlow_leq_outCut {V : Type*}  [inst' : fintype V]
     sorry
   end
 
-lemma major_sum {V : Type*} (X : finset V) (Y : finset V) (f : V → V → ℝ) (g : V → V → ℝ) (h : ∀ x : X , f x ≤ g x): 
-∑ (y : V) in Y, ∑ (x : V) in X, f x y ≤ ∑ (y : V) in Y, ∑ x : X, g x y:=
+lemma major_sum {V : Type*} (X : finset V) (Y : finset V) (f : V → V → ℝ) (g : V → V → ℝ): (∀ x y: V, f x y ≤ g x y) → 
+∑ (x : V) in X, ∑ (y : V) in Y, f x y ≤ ∑ (x : V) in X, ∑ (y : V) in Y, g x y:=
   begin
     sorry
   end
@@ -369,7 +369,6 @@ lemma mk_in_non_neg {V : Type*}  [inst' : fintype V]
   begin
     sorry
   end
- 
 
 lemma flow_leq_cut {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V) (same_net : afn.network = ct.network):
@@ -377,6 +376,7 @@ lemma flow_leq_cut {V : Type*}  [inst' : fintype V]
 begin 
   unfold F_value,
   rw flow_value_global_ver afn ct,
+
   have foo: mk_out afn.f ct.S - mk_in afn.f ct.S ≤ mk_out afn.f ct.S :=
     begin
       exact sub_non_neg_ineq (mk_out afn.f ct.S) (mk_in afn.f ct.S) (mk_in_non_neg afn ct.S),
@@ -384,14 +384,27 @@ begin
   
   have bar: mk_out afn.f ct.S ≤ mk_out afn.network.c ct.S :=
     begin
-      sorry
+      rw [mk_out, mk_out],
+      have blurg: ∀ (x y : V), (afn.f x y ≤ afn.network.to_capacity.c x y) :=
+        begin
+          exact afn.no_overflow,
+        end,
+      exact major_sum (ct.S) (V' \ ct.S) (afn.f) (afn.network.c) (blurg),
     end,
   
   have blurg: mk_out afn.network.to_capacity.c ct.S = cut_value ct :=
     begin
-      sorry,
+      rw same_net,
+      refl,
     end,
-  sorry,
+
+  have soap: mk_out afn.f ct.S - mk_in afn.f ct.S ≤ mk_out afn.network.to_capacity.c ct.S :=
+    begin
+      exact le_trans (foo) (bar),
+    end,
+  
+  rw blurg at soap,
+  exact soap,
 end
 
 def is_max_flow_network  {V : Type*}  [inst' : fintype V]

@@ -8,6 +8,18 @@ open finset
 open_locale big_operators
 open_locale classical
 
+--constant X : finset ℕ
+--X = ({ x : ℕ // x < 5})
+--X = 2
+--#print X
+--inductive oier : Sort*
+--| a 
+--| b
+--| c 
+--def aosdjfl : finset oier 
+--:= let x := ({oier.a} : finset oier)
+--   in xᶜ
+
 structure strange_digraph (V : Type*)  :=
   (is_edge : V → V → Prop)
   (hnonsymmetric : ∀ u v : V, ¬ ((is_edge u v) ∧ (is_edge v u)))
@@ -64,6 +76,8 @@ noncomputable
 def cut_value {V : Type*}  [inst' : fintype V]
     (c : cut V) : ℝ
 := mk_out c.network.c c.S
+
+end definitions
 
 lemma x_not_in_s {V : Type*} [fintype V]
   (c : cut V)  : ∀ x : V, x ∈ c.T -> x ∉ ({c.network.source} : finset V) :=
@@ -369,7 +383,7 @@ lemma outFlow_leq_outCut {V : Type*}  [inst' : fintype V]
     sorry
   end
 
-lemma major_sum {V : Type*} (X : finset V) (Y : finset V) (f : V → V → ℝ) (g : V → V → ℝ): (∀ x y: V, f x y ≤ g x y) → 
+lemma major_doublesum {V : Type*} (X : finset V) (Y : finset V) (f : V → V → ℝ) (g : V → V → ℝ): (∀ x y: V, f x y ≤ g x y) → 
 ∑ (x : V) in X, ∑ (y : V) in Y, f x y ≤ ∑ (x : V) in X, ∑ (y : V) in Y, g x y:=
   begin
     sorry
@@ -411,7 +425,7 @@ begin
         begin
           exact afn.no_overflow,
         end,
-      exact major_sum (ct.S) (V' \ ct.S) (afn.f) (afn.network.c) (blurg),
+      exact major_doublesum (ct.S) (V' \ ct.S) (afn.f) (afn.network.c) (blurg),
     end,
   
   have blurg: mk_out afn.network.to_capacity.c ct.S = cut_value ct :=
@@ -431,7 +445,7 @@ end
 
 def is_max_flow_network  {V : Type*}  [inst' : fintype V]
   (fn: active_flow_network V) : Prop
-:= ∀ fn' : active_flow_network V, fn.network = fn'.network → F_value fn ≥ F_value fn'
+:= ∀ fn' : active_flow_network V, fn.network = fn'.network → F_value fn' ≤ F_value fn
 
 def is_min_cut {V : Type*}  [inst' : fintype V]
   (fn: cut V) : Prop
@@ -440,10 +454,19 @@ def is_min_cut {V : Type*}  [inst' : fintype V]
 
 lemma superlemma_1  {V : Type*}  [inst' : fintype V]
   (afn : active_flow_network V) (ct : cut V) (hsame_network: afn.network = ct.network):
-  cut_value ct = F_value afn -> is_max_flow_network afn ∧ is_min_cut ct
+  cut_value ct = F_value afn -> is_max_flow_network afn --∧ is_min_cut ct
   :=
   begin
-    sorry
+    intro h_eq_val,
+    intro fn, 
+    intro h_same_net,
+    rw ← h_eq_val,
+    have blorgon: fn.network = ct.network :=
+    begin
+      rw ← h_same_net,
+      exact hsame_network,
+    end,
+    exact flow_leq_cut (fn) (ct) (blorgon),
   end
 
 lemma imp_is_trans {p : Prop} {q : Prop} {r : Prop} (h_1: p → q) (h_2: q → r): (p → r)

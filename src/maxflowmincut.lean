@@ -589,7 +589,31 @@ section superlemma3
   begin
     let S : finset V := mk_S rsn,
     let T := V' \ S,
-    sorry,
+    have blorg: S = mk_S rsn := 
+      begin 
+        refl, 
+      end,
+    let ted := mk_cut_from_S (rsn) (S) (blorg),
+    have bob: cut_value ted = F_value rsn.afn := 
+      begin 
+        have blurg : F_value rsn.afn = mk_out rsn.afn.f ted.S := 
+          begin
+            have h_eq_network : rsn.afn.network = ted.network := sorry, 
+            have h_right : ∀ u ∈ ted.T, ∀ v ∈ ted.S, rsn.afn.f u v = 0 := sorry,
+            exact f_value_eq_out (ted) (rsn.afn) (h_eq_network) (h_right),
+          end,
+        rw blurg,
+
+        have blurgon : mk_out rsn.afn.f ted.S = cut_value ted := 
+          begin
+            have substitute : mk_out rsn.afn.f ted.S = mk_out rsn.afn.network.c S := sorry,
+            rw cut_value,
+            have sub2 : ted.network.to_capacity.c = rsn.afn.f := sorry,
+            rw sub2,
+          end,
+        rw ← blurgon,
+      end, 
+    exact exists.intro ted bob,
   end
 
 -- lemma three_way_equiv (a b c : Prop) : (a -> b) -> (b -> c) -> (c -> a) -> ((a <-> b) ∧ (b <-> c) ∧ (c <-> a))

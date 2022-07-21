@@ -411,7 +411,7 @@ lemma flow_leq_cut {V : Type*}  [inst' : fintype V]
   F_value afn ≤ cut_value ct :=
 begin 
   unfold F_value,
-  rw flow_value_global_ver afn ct,
+  rw flow_value_global_ver afn ct same_net,
 
   have foo: mk_out afn.f ct.S - mk_in afn.f ct.S ≤ mk_out afn.f ct.S :=
     begin
@@ -491,9 +491,10 @@ structure residual_network  (V : Type*)  [inst' : fintype V]
   :=
   (afn : active_flow_network V)
   (f' : V -> V -> ℝ)
-  (hdef : f' = mk_cf afn)
+  (f_def : f' = mk_cf afn)
   (is_edge : V -> V -> Prop)
-  (h : ∀ u v : V, is_edge u v  == (f' u v > 0) )
+  (is_edge_def : is_edge = λ u v, f' u v > 0 )
+
 
 
 inductive path {V : Type* } (is_edge : V -> V -> Prop) (a : V) : V → Sort*

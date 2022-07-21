@@ -496,8 +496,12 @@ structure residual_network  (V : Type*)  [inst' : fintype V]
   (is_edge_def : is_edge = λ u v, f' u v > 0 )
 
 
+noncomputable
+def mk_rsn {V : Type*} [fintype V]
+  (afn : active_flow_network V) : residual_network V
+:= ⟨afn, mk_cf afn, rfl, λ u v, mk_cf afn u v > 0 , rfl ⟩
 
-inductive path {V : Type* } (is_edge : V -> V -> Prop) (a : V) : V → Sort*
+inductive path {V : Type* } (is_edge : V -> V -> Prop) (a : V) : V → Prop
 | nil  : path a
 | cons : Π {b c : V}, path b → (is_edge b c) → path c
 
@@ -527,12 +531,65 @@ begin
 sorry
 end
 
-lemma superlemma3 {V : Type*} [inst' : fintype V]
-  (rsn : residual_network V)
-  -- (hno_augumenting_path : ∀ s t : V, path rsn.is_edge s t → ¬(s = rsn.afn.network.source ∧ t = rsn.afn.network.sink))
-  (hno_augumenting_path : no_augumenting_path rsn)
-  : (∃c : cut V, cut_value c = F_value rsn.afn)
-:= sorry
+section superlemma3
+
+  noncomputable
+  def mk_S {V : Type*} [inst' : fintype V]
+    (rsn : residual_network V) : finset V :=
+    {x | path rsn.is_edge rsn.afn.network.source x}.to_finset
+
+  noncomputable
+  def mk_cut_from_S {V : Type*} [inst' : fintype V]
+    (rsn : residual_network V)
+    (S : finset V) (hS : S = mk_S rsn) : cut V :=
+  ⟨rsn.afn.network, S, V' \ S, sorry, sorry, sorry ⟩
+
+  lemma s_t_not_connected {V : Type*} [inst' : fintype V]
+    (rsn : residual_network V)
+    (S : finset V) (hS : S = mk_S rsn) :
+    ∀ u ∈ S, ∀ v ∈ (V' \ S), ¬ rsn.is_edge u v
+    := sorry
+
+  lemma residual_capacity_zero {V : Type*} [inst' : fintype V]
+    (rsn : residual_network V)
+    (ct : cut V)
+    (h_eq_network : rsn.afn.network = ct.network)
+    (h: ∀ u ∈ ct.S, ∀ v ∈ (V' \ ct.S), ¬ rsn.is_edge u v) :
+    ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 :=
+    sorry
+
+  lemma min_max_cap_flow {V : Type*} [inst' : fintype V]
+    (rsn : residual_network V)
+    (ct : cut V)
+    (h_eq_network : rsn.afn.network = ct.network)
+    (h: ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 ) :
+    (∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.afn.f u v = rsn.afn.network.c u v) ∧
+    (∀ u ∈ ct.T, ∀ v ∈ ct.S, rsn.afn.f u v = 0) := sorry
+
+  lemma f_value_eq_out {V : Type*} [inst' : fintype V]
+    (ct : cut V)
+    (afn : active_flow_network V)
+    (h_eq_network : afn.network = ct.network)
+    (h : (∀ u ∈ ct.T, ∀ v ∈ ct.S, afn.f u v = 0)) :
+    F_value afn = mk_out afn.f ct.S := sorry
+
+  lemma cut_value_eq_out {V : Type*} [inst' : fintype V]
+    (ct : cut V)
+    (afn : active_flow_network V)
+    (h_eq_network : afn.network = ct.network)
+    (h : (∀ u ∈ ct.S, ∀ v ∈ ct.T, afn.f u v = afn.network.c u v) ∧
+         (∀ u ∈ ct.T, ∀ v ∈ ct.S, afn.f u v = 0)) := sorry
+
+  lemma superlemma3 {V : Type*} [inst' : fintype V]
+    (rsn : residual_network V)
+    -- (hno_augumenting_path : ∀ s t : V, path rsn.is_edge s t → ¬(s = rsn.afn.network.source ∧ t = rsn.afn.network.sink))
+    (hno_augumenting_path : no_augumenting_path rsn)
+    : (∃c : cut V, cut_value c = F_value rsn.afn) :=
+  begin
+    let S : finset V := mk_S rsn,
+    let T := V' \ S,
+    sorry,
+  end
 
 -- lemma three_way_equiv (a b c : Prop) : (a -> b) -> (b -> c) -> (c -> a) -> ((a <-> b) ∧ (b <-> c) ∧ (c <-> a))
 -- :=

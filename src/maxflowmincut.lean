@@ -578,7 +578,8 @@ section superlemma3
     (afn : active_flow_network V)
     (h_eq_network : afn.network = ct.network)
     (h : (∀ u ∈ ct.S, ∀ v ∈ ct.T, afn.f u v = afn.network.c u v) ∧
-         (∀ u ∈ ct.T, ∀ v ∈ ct.S, afn.f u v = 0)) := sorry
+         (∀ u ∈ ct.T, ∀ v ∈ ct.S, afn.f u v = 0)) :
+        mk_out afn.f ct.S = cut_value ct := sorry
 
   lemma superlemma3 {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)

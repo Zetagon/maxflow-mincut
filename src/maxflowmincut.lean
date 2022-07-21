@@ -566,7 +566,15 @@ section superlemma3
     (rsn : residual_network V)
     (S : finset V) (hS : S = mk_S rsn) :
     ∀ u ∈ S, ∀ v ∈ (V' \ S), ¬ rsn.is_edge u v
-    := sorry
+    :=
+    begin
+      intros u h_u_in_S v h_v_in_T is_edge_u_v,
+      rw hS at *,
+      unfold mk_S at *,
+      simp only [set.mem_to_finset, set.mem_set_of_eq, mem_sdiff, mem_univ, true_and] at *,
+      have tmp := path.cons h_u_in_S is_edge_u_v,
+      exact h_v_in_T tmp,
+    end
 
   lemma residual_capacity_zero {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)

@@ -541,8 +541,26 @@ section superlemma3
   noncomputable
   def mk_cut_from_S {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)
+    (hno_augumenting_path : no_augumenting_path rsn)
     (S : finset V) (hS : S = mk_S rsn) : cut V :=
-  ⟨rsn.afn.network, S, V' \ S, sorry, sorry, sorry ⟩
+  ⟨rsn.afn.network, S, V' \ S,
+    begin
+      rw hS,
+      unfold mk_S,
+      simp only [set.mem_to_finset, set.mem_set_of_eq],
+      exact path.nil,
+    end,
+    begin
+      rw hS,
+      unfold mk_S,
+      simp only [mem_sdiff, mem_univ, set.mem_to_finset, set.mem_set_of_eq, true_and],
+      intro p,
+      unfold no_augumenting_path at hno_augumenting_path,
+      have tmp := hno_augumenting_path rsn.afn.network.sink p,
+      simp only [eq_self_iff_true, not_true] at tmp,
+      exact tmp,
+    end,
+      rfl⟩
 
   lemma s_t_not_connected {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)

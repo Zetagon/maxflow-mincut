@@ -614,7 +614,7 @@ section superlemma3
     rw ← ct.Tcomp at h,
     specialize h u h_u_in_S v h_v_in_T,
     rw rsn.is_edge_def at h,
-    simp at h,
+    simp only [not_lt] at h,
     have hge := residual_capacity_non_neg rsn u v,
     exact ge_antisymm hge h,
   end
@@ -625,7 +625,63 @@ section superlemma3
     (h_eq_network : rsn.afn.network = ct.network)
     (h: ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 ) :
     (∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.afn.f u v = rsn.afn.network.c u v) ∧
-    (∀ u ∈ ct.T, ∀ v ∈ ct.S, rsn.afn.f u v = 0) := sorry
+    (∀ u ∈ ct.T, ∀ v ∈ ct.S, rsn.afn.f u v = 0) :=
+  begin
+    split,
+    {
+      intros u h_u_in_S v h_v_in_T,
+      specialize h u h_u_in_S v h_v_in_T,
+      rw rsn.f_def at h,
+      unfold mk_cf at h,
+      have tmp := classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge u v),
+      cases tmp,
+      {
+        simp only [tmp, if_true] at h,
+        linarith,
+      },
+      {
+        simp only [tmp, if_false, ite_eq_right_iff] at h,
+        have foo := rsn.afn.network.vanishes u v tmp,
+        rw foo,
+        clear tmp h,
+        have foo := rsn.afn.non_neg_flow u v,
+        have bar := rsn.afn.no_overflow u v,
+        linarith,
+      }
+    },
+    {
+      intros v h_v_in_T u h_u_in_S,
+      specialize h u h_u_in_S v h_v_in_T,
+      rw rsn.f_def at h,
+      unfold mk_cf at h,
+      have tmp := classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge u v),
+      cases tmp,
+      {
+        have foo := rsn.afn.network.hnonsymmetric u v,
+        simp only [not_and] at foo,
+        specialize foo tmp,
+        have bar := rsn.afn.non_neg_flow v u,
+        have baz := rsn.afn.no_overflow v u,
+        have blurg := rsn.afn.network.vanishes v u foo,
+        linarith,
+      },
+      {
+        simp only [tmp, if_false, ite_eq_right_iff] at h,
+        clear tmp,
+        have tmp := classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge v u),
+        cases tmp,
+        {
+          exact h tmp,
+        },
+        {
+          have foo := rsn.afn.non_neg_flow v u,
+          have bar := rsn.afn.no_overflow v u,
+          have baz := rsn.afn.network.vanishes v u tmp,
+          linarith,
+        },
+      },
+    }
+  end
 
   lemma f_value_eq_out {V : Type*} [inst' : fintype V]
     (ct : cut V)

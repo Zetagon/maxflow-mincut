@@ -619,7 +619,7 @@ section superlemma3
       begin 
         refl, 
       end,
-    let ted := mk_cut_from_S (rsn) (S) (blorg),
+    let ted := mk_cut_from_S (rsn) (hno_augumenting_path) (S) (blorg),
     have bob: cut_value ted = F_value rsn.afn := 
       begin 
         have blurg : F_value rsn.afn = mk_out rsn.afn.f ted.S := 

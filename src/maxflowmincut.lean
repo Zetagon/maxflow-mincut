@@ -522,6 +522,33 @@ def no_augumenting_path {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) : Prop
   := ∀ t : V, path rsn.is_edge rsn.afn.network.source t → ¬( t = rsn.afn.network.sink)
 
+lemma residual_capacity_non_neg {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V)
+  : ∀ u v : V,  0 ≤ rsn.f' u v :=
+begin
+  intros u v,
+  cases rsn,
+  simp only,
+  rw rsn_f_def,
+  unfold mk_cf,
+  have tmp := classical.em (rsn_afn.network.to_capacity.to_strange_digraph.is_edge u v),
+  cases tmp,
+  {
+    simp only [tmp, if_true, sub_nonneg, rsn_afn.no_overflow],
+  },
+  {
+    simp only [tmp, if_false], clear tmp,
+    have tmp := classical.em (rsn_afn.network.to_capacity.to_strange_digraph.is_edge v u),
+    cases tmp,
+    {
+      have tmp' := rsn_afn.non_neg_flow v u,
+      simp only [tmp, tmp', if_true],
+    },
+    {
+      simp [tmp],
+    },
+  },
+end
 
 lemma superlemma2 {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)

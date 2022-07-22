@@ -658,6 +658,7 @@ section superlemma3
 --     exact ⟨hca, hbc ∘ hab ⟩,
 --   }
 -- end
+end superlemma3
 
 theorem maxflow_mincut {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) :
@@ -678,8 +679,7 @@ split,
     cases c with c heq,
     cases heq with heq heq_network,
     have foo := superlemma_1 rsn.afn c heq_network.symm heq,
-    exact foo.left,
+    exact foo,
   }
-}
-
+} 
 end

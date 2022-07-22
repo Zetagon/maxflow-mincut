@@ -609,7 +609,15 @@ section superlemma3
     (h_eq_network : rsn.afn.network = ct.network)
     (h: ∀ u ∈ ct.S, ∀ v ∈ (V' \ ct.S), ¬ rsn.is_edge u v) :
     ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 :=
-    sorry
+  begin
+    intros u h_u_in_S v h_v_in_T,
+    rw ← ct.Tcomp at h,
+    specialize h u h_u_in_S v h_v_in_T,
+    rw rsn.is_edge_def at h,
+    simp at h,
+    have hge := residual_capacity_non_neg rsn u v,
+    exact ge_antisymm hge h,
+  end
 
   lemma min_max_cap_flow {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)

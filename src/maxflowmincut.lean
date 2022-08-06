@@ -540,6 +540,7 @@ begin
     {
       have tmp' := rsn_afn.non_neg_flow v u,
       simp only [tmp, tmp', if_true],
+      linarith,
     },
     {
       simp only [tmp, if_false],
@@ -608,7 +609,6 @@ section superlemma3
     ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 :=
   begin
     intros u h_u_in_S v h_v_in_T,
-    rw ← ct.Tcomp at h,
     specialize h u h_u_in_S v h_v_in_T,
     rw rsn.is_edge_def at h,
     simp only [not_lt] at h,

@@ -24,9 +24,6 @@ structure strange_digraph (V : Type*)  :=
   (is_edge : V → V → Prop)
   (hnonsymmetric : ∀ u v : V, ¬ ((is_edge u v) ∧ (is_edge v u)))
 
-infixr ` ⇉ `:10 := strange_digraph.is_edge -- type as \h
-
-
 structure capacity (V : Type*)
   extends strange_digraph V:=
   (c : V -> V -> ℝ)
@@ -78,6 +75,18 @@ def cut_value {V : Type*}  [inst' : fintype V]
 := mk_out c.network.c c.S
 
 end definitions
+
+lemma f_vanishes_outside_edge {V : Type*} [fintype V] 
+  (afn : active_flow_network V) (u : V) (v : V) (not_edge: ¬afn.network.is_edge u v): afn.f u v = 0 := 
+  begin
+    have cap_is_zero: afn.network.c u v = 0 :=
+      begin
+        exact afn.network.vanishes u v not_edge,
+      end,
+    have bar := afn.no_overflow u v,
+    have foo := afn.non_neg_flow u v,
+    linarith,
+  end
 
 lemma x_not_in_s {V : Type*} [fintype V]
   (c : cut V)  : ∀ x : V, x ∈ c.T -> x ∉ ({c.network.source} : finset V) :=
@@ -713,13 +722,30 @@ section superlemma3
     have blorg: S = mk_S rsn := by refl,
     let min_cut := mk_cut_from_S (rsn) (hno_augumenting_path) (S) (blorg),
 
+    have subtract: ∀ x y : ℝ, (x=y) ↔ y-x=0 := begin intros x y, split, intro heq, linarith, intro heq, linarith, end,
 
+    have cf_vanishes_on_pipes: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.f' u v = 0 := sorry, 
+    have cf_vanishes_on_pipes_spec: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, (rsn.afn.network.is_edge u v) → 
+        (rsn.afn.network.c u v - rsn.afn.f u v = 0) := 
+        begin
+          intros u u_in_S v v_in_T uv_is_edge,
+          sorry
+        end,
     have eq_on_pipes: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.afn.f u v = rsn.afn.network.c u v := 
       begin 
-        have no_edge: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, ¬rsn.is_edge u v := sorry,
-        have f_prim_is_zero: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.f' u v = 0 := sorry,
-        have connector_full_or_non_existent: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S,  
-        (rsn.afn.network.c u v = rsn.afn.f u v) ∨ (¬rsn.afn.network.is_edge u v)  := sorry,
+        intros u u_in_S v v_in_T,
+        cases classical.em (rsn.afn.network.is_edge u v),
+        { rw subtract (rsn.afn.f u v) (rsn.afn.network.to_capacity.c u v),
+          sorry, },
+        { 
+          rw rsn.afn.network.vanishes u v h,
+          exact f_vanishes_outside_edge (rsn.afn) (u) (v) (h),
+          
+         },
+        --have no_edge: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, ¬rsn.is_edge u v := sorry,
+        --have f_prim_is_zero: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.f' u v = 0 := sorry,
+        --have connector_full_or_non_existent: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S,  
+        --(rsn.afn.network.c u v = rsn.afn.f u v) ∨ (¬rsn.afn.network.is_edge u v)  := sorry,
         sorry 
       end,
     

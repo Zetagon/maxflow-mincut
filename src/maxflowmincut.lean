@@ -711,7 +711,17 @@ section superlemma3
     (h_eq_network : afn.network = ct.network)
     (h : (∀ u ∈ ct.S, ∀ v ∈ V' \ ct.S, afn.f u v = afn.network.c u v) ∧
          (∀ u ∈ V' \ ct.S, ∀ v ∈ ct.S, afn.f u v = 0)) :
-        mk_out afn.f ct.S = cut_value ct := sorry
+        mk_out afn.f ct.S = cut_value ct :=
+  begin
+    cases h with h_flow_eq_cap h_flow_zero,
+    dsimp [cut_value, mk_out],
+    apply finset.sum_congr rfl,
+    intros x x_in_S,
+    rw ← ct.Tcomp at *,
+    apply finset.sum_congr rfl,
+    intros y y_in_T,
+    simp [h_eq_network, h_flow_eq_cap x x_in_S y y_in_T],
+  end
 
   lemma eq_on_res_then_on_sum {V : Type*} [inst' : fintype V]
     (A : finset V) (B : finset V) (f : V → V → ℝ) (g : V → V → ℝ) (eq_on_res : ∀ u ∈ A, ∀ v ∈ B, f u v = g u v) :

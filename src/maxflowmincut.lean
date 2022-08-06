@@ -84,7 +84,7 @@ lemma x_not_in_s {V : Type*} [fintype V]
 begin
   intros x hxinS,
   cases c,
-  simp at *,
+  simp only [mem_singleton] at *,
   rw c_Tcomp at hxinS,
   have foo : univ \ c_S ∩ c_S = ∅ := sdiff_inter_self c_S univ,
   have foo : disjoint (univ \ c_S)  c_S  := sdiff_disjoint,
@@ -113,15 +113,15 @@ lemma mk_in_single_node { V : Type* }  [fintype V]
   (p : V) (afn : active_flow_network V) :
   mk_in (afn.f) {p} = ∑ v in finset.univ, (afn.f) v p :=
   begin
-      rw @sum_eq_sum_diff_singleton_add _ _ _ _ univ p (by simp) (λ x, afn.f x p),
+      rw @sum_eq_sum_diff_singleton_add _ _ _ _ univ p (by simp only [mem_univ]) (λ x, afn.f x p),
       have foo : (λ (x : V), afn.f x p) p = afn.f p p := rfl,
       simp only [congr_fun],
       rw f_zero_zero afn p,
       have bar : ∑ (x : V) in univ \ {p}, afn.f x p + 0 = (λp', ∑ (x : V) in univ \ {p'}, afn.f x p' ) p
-      := by simp,
+      := by simp only [add_zero],
       rw bar, clear bar,
       rw ← @finset.sum_singleton _ _ p (λp', ∑ (x : V) in univ \ {p'}, afn.f x p' ) _,
-      simp [mk_in],
+      simp only [mk_in, sum_singleton],
   end
 
 @[simp] lemma mk_in_single_node' { V : Type* }  [fintype V]
@@ -197,7 +197,7 @@ begin
   unfold tmp_f at foo,
   rw foo,
   unfold tmp_zero,
-  simp,
+  simp only [sum_const_zero],
 end
 
 lemma out_in_disjunct {V : Type*}  [inst' : fintype V]
@@ -300,7 +300,7 @@ lemma S_minus_s_eq_T_union_s {V : Type*}  [inst' : fintype V]
   V' \ (ct.S \ {afn.network.source}) = ct.T ∪ {afn.network.source} :=
 begin
   rw sdiff_sdiff_right',
-  simp,
+  simp only [inf_eq_inter, univ_inter, sup_eq_union],
   have fljlkoo : (V' \ ct.S) = ct.T :=
   begin
     rw cut.Tcomp,
@@ -363,13 +363,13 @@ lemma flow_value_global_ver {V : Type*}  [inst' : fintype V]
        ... = mk_out f S + mk_in f {s} - mk_in f S - mk_out f {s}  :
        begin
          simp_rw [in_as_out, out_as_in],
-         simp,
+         simp only [sdiff_sdiff_right_self, inf_eq_inter, univ_inter, sub_left_inj],
          rw ← ct.Tcomp,
-         simp,
+         simp only [sub_right_inj],
          have b : V' \ T = S :=
          begin
            rw [hT, ct.Tcomp],
-           simp,
+           simp only [sdiff_sdiff_right_self, inf_eq_inter, univ_inter],
          end,
          rw b,
        end,
@@ -522,6 +522,33 @@ def no_augumenting_path {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) : Prop
   := ∀ t : V, path rsn.is_edge rsn.afn.network.source t → ¬( t = rsn.afn.network.sink)
 
+lemma residual_capacity_non_neg {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V)
+  : ∀ u v : V,  0 ≤ rsn.f' u v :=
+begin
+  intros u v,
+  cases rsn,
+  simp only,
+  rw rsn_f_def,
+  unfold mk_cf,
+  have tmp := classical.em (rsn_afn.network.to_capacity.to_strange_digraph.is_edge u v),
+  cases tmp,
+  {
+    simp only [tmp, if_true, sub_nonneg, rsn_afn.no_overflow],
+  },
+  {
+    simp only [tmp, if_false], clear tmp,
+    have tmp := classical.em (rsn_afn.network.to_capacity.to_strange_digraph.is_edge v u),
+    cases tmp,
+    {
+      have tmp' := rsn_afn.non_neg_flow v u,
+      simp only [tmp, tmp', if_true],
+    },
+    {
+      simp only [tmp, if_false],
+    },
+  },
+end
 
 lemma superlemma2 {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
@@ -582,7 +609,15 @@ section superlemma3
     (h_eq_network : rsn.afn.network = ct.network)
     (h: ∀ u ∈ ct.S, ∀ v ∈ ct.T, ¬ rsn.is_edge u v) :
     ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 :=
-    sorry
+  begin
+    intros u h_u_in_S v h_v_in_T,
+    rw ← ct.Tcomp at h,
+    specialize h u h_u_in_S v h_v_in_T,
+    rw rsn.is_edge_def at h,
+    simp only [not_lt] at h,
+    have hge := residual_capacity_non_neg rsn u v,
+    exact ge_antisymm hge h,
+  end
 
   lemma min_max_cap_flow {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)
@@ -590,7 +625,63 @@ section superlemma3
     (h_eq_network : rsn.afn.network = ct.network)
     (h: ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 ) :
     (∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.afn.f u v = rsn.afn.network.c u v) ∧
-    (∀ u ∈ ct.T, ∀ v ∈ ct.S, rsn.afn.f u v = 0) := sorry
+    (∀ u ∈ ct.T, ∀ v ∈ ct.S, rsn.afn.f u v = 0) :=
+  begin
+    split,
+    {
+      intros u h_u_in_S v h_v_in_T,
+      specialize h u h_u_in_S v h_v_in_T,
+      rw rsn.f_def at h,
+      unfold mk_cf at h,
+      have tmp := classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge u v),
+      cases tmp,
+      {
+        simp only [tmp, if_true] at h,
+        linarith,
+      },
+      {
+        simp only [tmp, if_false, ite_eq_right_iff] at h,
+        have foo := rsn.afn.network.vanishes u v tmp,
+        rw foo,
+        clear tmp h,
+        have foo := rsn.afn.non_neg_flow u v,
+        have bar := rsn.afn.no_overflow u v,
+        linarith,
+      }
+    },
+    {
+      intros v h_v_in_T u h_u_in_S,
+      specialize h u h_u_in_S v h_v_in_T,
+      rw rsn.f_def at h,
+      unfold mk_cf at h,
+      have tmp := classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge u v),
+      cases tmp,
+      {
+        have foo := rsn.afn.network.hnonsymmetric u v,
+        simp only [not_and] at foo,
+        specialize foo tmp,
+        have bar := rsn.afn.non_neg_flow v u,
+        have baz := rsn.afn.no_overflow v u,
+        have blurg := rsn.afn.network.vanishes v u foo,
+        linarith,
+      },
+      {
+        simp only [tmp, if_false, ite_eq_right_iff] at h,
+        clear tmp,
+        have tmp := classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge v u),
+        cases tmp,
+        {
+          exact h tmp,
+        },
+        {
+          have foo := rsn.afn.non_neg_flow v u,
+          have bar := rsn.afn.no_overflow v u,
+          have baz := rsn.afn.network.vanishes v u tmp,
+          linarith,
+        },
+      },
+    }
+  end
 
   lemma f_value_eq_out {V : Type*} [inst' : fintype V]
     (ct : cut V)

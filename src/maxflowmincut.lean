@@ -688,7 +688,25 @@ section superlemma3
     (afn : active_flow_network V)
     (h_eq_network : afn.network = ct.network)
     (h : (∀ u ∈ ct.T, ∀ v ∈ ct.S, afn.f u v = 0)) :
-    F_value afn = mk_out afn.f ct.S := sorry
+    F_value afn = mk_out afn.f ct.S :=
+  begin
+    dsimp [F_value],
+    rw flow_value_global_ver afn ct h_eq_network,
+    dsimp [mk_in],
+    simp_rw [← ct.Tcomp],
+    simp only [sub_eq_self],
+    have sum_eq_sum_zero : ∑ (x : V) in ct.T, ∑ y in ct.S, (afn.f x y) = ∑ x in ct.T, ∑ y in ct.S, 0
+    :=
+    begin
+      apply finset.sum_congr rfl,
+      intros x x_in_T,
+      apply finset.sum_congr rfl,
+      intros y y_in_S,
+      exact h x x_in_T y y_in_S,
+    end,
+    rw sum_eq_sum_zero,
+    simp only [sum_const_zero],
+  end
 
   lemma cut_value_eq_out {V : Type*} [inst' : fintype V]
     (ct : cut V)

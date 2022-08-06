@@ -24,8 +24,6 @@ structure strange_digraph (V : Type*)  :=
   (is_edge : V → V → Prop)
   (hnonsymmetric : ∀ u v : V, ¬ ((is_edge u v) ∧ (is_edge v u)))
 
-infixr ` ⇉ `:10 := strange_digraph.is_edge -- type as \h
-
 
 structure capacity (V : Type*)
   extends strange_digraph V:=
@@ -77,7 +75,6 @@ def cut_value {V : Type*}  [inst' : fintype V]
     (c : cut V) : ℝ
 := mk_out c.network.c c.S
 
-end definitions
 
 lemma x_not_in_s {V : Type*} [fintype V]
   (c : cut V)  : ∀ x : V, x ∈ c.T -> x ∉ ({c.network.source} : finset V) :=

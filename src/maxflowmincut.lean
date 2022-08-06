@@ -84,7 +84,7 @@ lemma x_not_in_s {V : Type*} [fintype V]
 begin
   intros x hxinS,
   cases c,
-  simp at *,
+  simp only [mem_singleton] at *,
   rw c_Tcomp at hxinS,
   have foo : univ \ c_S ∩ c_S = ∅ := sdiff_inter_self c_S univ,
   have foo : disjoint (univ \ c_S)  c_S  := sdiff_disjoint,
@@ -113,15 +113,15 @@ lemma mk_in_single_node { V : Type* }  [fintype V]
   (p : V) (afn : active_flow_network V) :
   mk_in (afn.f) {p} = ∑ v in finset.univ, (afn.f) v p :=
   begin
-      rw @sum_eq_sum_diff_singleton_add _ _ _ _ univ p (by simp) (λ x, afn.f x p),
+      rw @sum_eq_sum_diff_singleton_add _ _ _ _ univ p (by simp only [mem_univ]) (λ x, afn.f x p),
       have foo : (λ (x : V), afn.f x p) p = afn.f p p := rfl,
       simp only [congr_fun],
       rw f_zero_zero afn p,
       have bar : ∑ (x : V) in univ \ {p}, afn.f x p + 0 = (λp', ∑ (x : V) in univ \ {p'}, afn.f x p' ) p
-      := by simp,
+      := by simp only [add_zero],
       rw bar, clear bar,
       rw ← @finset.sum_singleton _ _ p (λp', ∑ (x : V) in univ \ {p'}, afn.f x p' ) _,
-      simp [mk_in],
+      simp only [mk_in, sum_singleton],
   end
 
 @[simp] lemma mk_in_single_node' { V : Type* }  [fintype V]
@@ -197,7 +197,7 @@ begin
   unfold tmp_f at foo,
   rw foo,
   unfold tmp_zero,
-  simp,
+  simp only [sum_const_zero],
 end
 
 lemma out_in_disjunct {V : Type*}  [inst' : fintype V]
@@ -300,7 +300,7 @@ lemma S_minus_s_eq_T_union_s {V : Type*}  [inst' : fintype V]
   V' \ (ct.S \ {afn.network.source}) = ct.T ∪ {afn.network.source} :=
 begin
   rw sdiff_sdiff_right',
-  simp,
+  simp only [inf_eq_inter, univ_inter, sup_eq_union],
   have fljlkoo : (V' \ ct.S) = ct.T :=
   begin
     rw cut.Tcomp,
@@ -363,13 +363,13 @@ lemma flow_value_global_ver {V : Type*}  [inst' : fintype V]
        ... = mk_out f S + mk_in f {s} - mk_in f S - mk_out f {s}  :
        begin
          simp_rw [in_as_out, out_as_in],
-         simp,
+         simp only [sdiff_sdiff_right_self, inf_eq_inter, univ_inter, sub_left_inj],
          rw ← ct.Tcomp,
-         simp,
+         simp only [sub_right_inj],
          have b : V' \ T = S :=
          begin
            rw [hT, ct.Tcomp],
-           simp,
+           simp only [sdiff_sdiff_right_self, inf_eq_inter, univ_inter],
          end,
          rw b,
        end,
@@ -545,7 +545,7 @@ begin
       simp only [tmp, tmp', if_true],
     },
     {
-      simp [tmp],
+      simp only [tmp, if_false],
     },
   },
 end

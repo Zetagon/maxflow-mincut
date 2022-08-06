@@ -24,6 +24,10 @@ structure strange_digraph (V : Type*)  :=
   (is_edge : V → V → Prop)
   (hnonsymmetric : ∀ u v : V, ¬ ((is_edge u v) ∧ (is_edge v u)))
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 848bb140f748c3a01f022c31013bd62e00cfd3cc
 structure capacity (V : Type*)
   extends strange_digraph V:=
   (c : V -> V -> ℝ)
@@ -74,7 +78,6 @@ def cut_value {V : Type*}  [inst' : fintype V]
     (c : cut V) : ℝ
 := mk_out c.network.c c.S
 
-end definitions
 
 lemma f_vanishes_outside_edge {V : Type*} [fintype V] 
   (afn : active_flow_network V) (u : V) (v : V) (not_edge: ¬afn.network.is_edge u v): afn.f u v = 0 := 
@@ -552,6 +555,7 @@ begin
     {
       have tmp' := rsn_afn.non_neg_flow v u,
       simp only [tmp, tmp', if_true],
+      linarith,
     },
     {
       simp only [tmp, if_false],
@@ -620,7 +624,6 @@ section superlemma3
     ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 :=
   begin
     intros u h_u_in_S v h_v_in_T,
-    rw ← ct.Tcomp at h,
     specialize h u h_u_in_S v h_v_in_T,
     rw rsn.is_edge_def at h,
     simp only [not_lt] at h,
@@ -697,7 +700,25 @@ section superlemma3
     (afn : active_flow_network V)
     (h_eq_network : afn.network = ct.network)
     (h : (∀ u ∈ ct.T, ∀ v ∈ ct.S, afn.f u v = 0)) :
-    F_value afn = mk_out afn.f ct.S := sorry
+    F_value afn = mk_out afn.f ct.S :=
+  begin
+    dsimp [F_value],
+    rw flow_value_global_ver afn ct h_eq_network,
+    dsimp [mk_in],
+    simp_rw [← ct.Tcomp],
+    simp only [sub_eq_self],
+    have sum_eq_sum_zero : ∑ (x : V) in ct.T, ∑ y in ct.S, (afn.f x y) = ∑ x in ct.T, ∑ y in ct.S, 0
+    :=
+    begin
+      apply finset.sum_congr rfl,
+      intros x x_in_T,
+      apply finset.sum_congr rfl,
+      intros y y_in_S,
+      exact h x x_in_T y y_in_S,
+    end,
+    rw sum_eq_sum_zero,
+    simp only [sum_const_zero],
+  end
 
   lemma cut_value_eq_out {V : Type*} [inst' : fintype V]
     (ct : cut V)
@@ -705,7 +726,17 @@ section superlemma3
     (h_eq_network : afn.network = ct.network)
     (h : (∀ u ∈ ct.S, ∀ v ∈ V' \ ct.S, afn.f u v = afn.network.c u v) ∧
          (∀ u ∈ V' \ ct.S, ∀ v ∈ ct.S, afn.f u v = 0)) :
-        mk_out afn.f ct.S = cut_value ct := sorry
+        mk_out afn.f ct.S = cut_value ct :=
+  begin
+    cases h with h_flow_eq_cap h_flow_zero,
+    dsimp [cut_value, mk_out],
+    apply finset.sum_congr rfl,
+    intros x x_in_S,
+    rw ← ct.Tcomp at *,
+    apply finset.sum_congr rfl,
+    intros y y_in_T,
+    simp [h_eq_network, h_flow_eq_cap x x_in_S y y_in_T],
+  end
 
   lemma eq_on_res_then_on_sum {V : Type*} [inst' : fintype V]
     (A : finset V) (B : finset V) (f : V → V → ℝ) (g : V → V → ℝ) (eq_on_res : ∀ u ∈ A, ∀ v ∈ B, f u v = g u v) :

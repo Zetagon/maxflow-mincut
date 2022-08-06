@@ -580,7 +580,7 @@ section superlemma3
     (rsn : residual_network V)
     (ct : cut V)
     (h_eq_network : rsn.afn.network = ct.network)
-    (h: ∀ u ∈ ct.S, ∀ v ∈ (V' \ ct.S), ¬ rsn.is_edge u v) :
+    (h: ∀ u ∈ ct.S, ∀ v ∈ ct.T, ¬ rsn.is_edge u v) :
     ∀ u ∈ ct.S, ∀ v ∈ ct.T, rsn.f' u v = 0 :=
     sorry
 
@@ -603,9 +603,13 @@ section superlemma3
     (ct : cut V)
     (afn : active_flow_network V)
     (h_eq_network : afn.network = ct.network)
-    (h : (∀ u ∈ ct.S, ∀ v ∈ ct.T, afn.f u v = afn.network.c u v) ∧
-         (∀ u ∈ ct.T, ∀ v ∈ ct.S, afn.f u v = 0)) :
+    (h : (∀ u ∈ ct.S, ∀ v ∈ V' \ ct.S, afn.f u v = afn.network.c u v) ∧
+         (∀ u ∈ V' \ ct.S, ∀ v ∈ ct.S, afn.f u v = 0)) :
         mk_out afn.f ct.S = cut_value ct := sorry
+
+  lemma eq_on_res_then_on_sum {V : Type*} [inst' : fintype V]
+    (A : finset V) (B : finset V) (f : V → V → ℝ) (g : V → V → ℝ) (eq_on_res : ∀ u ∈ A, ∀ v ∈ B, f u v = g u v) :
+    ∑ (u : V) in A, ∑ (v : V) in B, f u v = ∑ (u : V) in A, ∑ (v : V) in B, g u v := sorry 
 
   lemma superlemma3 {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)
@@ -615,31 +619,89 @@ section superlemma3
   begin
     let S : finset V := mk_S rsn,
     let T := V' \ S,
-    have blorg: S = mk_S rsn := 
-      begin 
-        refl, 
-      end,
-    let ted := mk_cut_from_S (rsn) (hno_augumenting_path) (S) (blorg),
-    have bob: cut_value ted = F_value rsn.afn := 
-      begin 
-        have blurg : F_value rsn.afn = mk_out rsn.afn.f ted.S := 
-          begin
-            have h_eq_network : rsn.afn.network = ted.network := sorry, 
-            have h_right : ∀ u ∈ ted.T, ∀ v ∈ ted.S, rsn.afn.f u v = 0 := sorry,
-            exact f_value_eq_out (ted) (rsn.afn) (h_eq_network) (h_right),
-          end,
-        rw blurg,
+    have blorg: S = mk_S rsn := by refl,
+    let min_cut := mk_cut_from_S (rsn) (hno_augumenting_path) (S) (blorg),
 
-        have blurgon : mk_out rsn.afn.f ted.S = cut_value ted := 
-          begin
-            have substitute : mk_out rsn.afn.f ted.S = mk_out rsn.afn.network.c S := sorry,
-            rw cut_value,
-            have sub2 : ted.network.to_capacity.c = rsn.afn.f := sorry,
-            rw sub2,
-          end,
-        rw ← blurgon,
-      end, 
-    exact exists.intro ted bob,
+
+    have eq_on_pipes: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.afn.f u v = rsn.afn.network.c u v := 
+      begin 
+        have no_edge: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, ¬rsn.is_edge u v := sorry,
+        have f_prim_is_zero: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.f' u v = 0 := sorry,
+        have connector_full_or_non_existent: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S,  
+        (rsn.afn.network.c u v = rsn.afn.f u v) ∨ (¬rsn.afn.network.is_edge u v)  := sorry,
+        sorry 
+      end,
+    
+    have no_backflow: ∀ u ∈ V' \ min_cut.S, ∀ v ∈ min_cut.S, rsn.afn.f u v = 0 := begin sorry end,
+    have no_backflow_func: ∀ u ∈ V' \ min_cut.S, ∀ v ∈ min_cut.S, rsn.afn.f u v = (λ u v, 0) u v := 
+      begin  
+        simp_rw ← no_backflow,
+        exact no_backflow,
+      end,
+
+    have eq_net : rsn.afn.network = min_cut.network := by refl,
+
+    have cut_eq_flow: cut_value min_cut = F_value rsn.afn := 
+    begin
+      rw F_value,
+      simp only,
+      rw flow_value_global_ver rsn.afn min_cut eq_net,
+
+      have no_input : mk_in rsn.afn.f min_cut.S = 0 := 
+        begin
+          rw mk_in,
+          rw eq_on_res_then_on_sum (V' \ min_cut.S) (min_cut.S) (rsn.afn.f) (λ u v, 0) (no_backflow_func),
+          simp only [sum_const_zero],
+        end,
+
+      rw no_input,
+      simp only [sub_zero],
+
+      have flow_eq_cap_on_cut : mk_out rsn.afn.f min_cut.S = mk_out rsn.afn.network.c min_cut.S := 
+        begin
+          unfold mk_out,
+          rw eq_on_res_then_on_sum (min_cut.S) (V' \ min_cut.S) (rsn.afn.f) (rsn.afn.network.to_capacity.c) (eq_on_pipes),
+        end,
+
+      rw flow_eq_cap_on_cut,
+      refl,
+    end,
+      --begin 
+        --have blurg : F_value rsn.afn = mk_out rsn.afn.f ted.S := 
+        --  begin
+        --    have h_eq_network : rsn.afn.network = ted.network := by refl, 
+        --    have h_right : ∀ u ∈ ted.T, ∀ v ∈ ted.S, rsn.f' u v = 0 := sorry,
+
+            --have no_backward : ∀ u ∈ ted.T, ∀ v ∈ ted.S, rsn.afn.f u v = 0 := sorry,
+
+            --rw F_value,
+            --rw flow_value_global_ver (rsn.afn) (ted) (),
+            --exact f_value_eq_out (ted) (rsn.afn) (h_eq_network) (h_right),
+          --  sorry
+          --end,
+        --rw blurg,
+
+        --have blurgon : mk_out rsn.afn.f ted.S = cut_value ted := 
+        --  begin
+            --have substitute : mk_out rsn.afn.f ted.S = mk_out rsn.afn.network.c S := begin unfold mk_out, sorry end,
+            --rw cut_value,
+            --rw sub2,
+            --unfold mk_out,
+
+            --have flow_eq_cap : ∀ u ∈ ted.S, ∀ v ∈ V' \ ted.S, rsn.afn.f u v = rsn.afn.network.c u v := sorry,
+            --have sub2 : (∀ u ∈ ted.S, ∀ v ∈ V' \ ted.S, rsn.afn.f u v = ted.network.to_capacity.c u v) := 
+            --begin
+            --  have h_eq_network : rsn.afn.network = ted.network := by refl, 
+            --  exact min_max_cap_flow (rsn) (ted) (h_eq_network) 
+            --  sorry 
+            --end,
+          
+            --exact eq_on_res_then_on_sum (ted.S) (ted.T) (rsn.afn.f) (ted.network.to_capacity.c) (sub2),
+        --    sorry
+        --  end,
+        --rw ← blurgon,
+      --end, 
+    exact exists.intro min_cut cut_eq_flow,
   end
 
 -- lemma three_way_equiv (a b c : Prop) : (a -> b) -> (b -> c) -> (c -> a) -> ((a <-> b) ∧ (b <-> c) ∧ (c <-> a))

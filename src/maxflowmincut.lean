@@ -739,8 +739,16 @@ section superlemma3
   end
 
   lemma eq_on_res_then_on_sum {V : Type*} [inst' : fintype V]
-    (A : finset V) (B : finset V) (f : V → V → ℝ) (g : V → V → ℝ) (eq_on_res : ∀ u ∈ A, ∀ v ∈ B, f u v = g u v) :
-    ∑ (u : V) in A, ∑ (v : V) in B, f u v = ∑ (u : V) in A, ∑ (v : V) in B, g u v := sorry 
+    (A : finset V) (B : finset V) (f : V → V → ℝ) (g : V → V → ℝ)
+    (eq_on_res : ∀ u ∈ A, ∀ v ∈ B, f u v = g u v) :
+    ∑ (u : V) in A, ∑ (v : V) in B, f u v = ∑ (u : V) in A, ∑ (v : V) in B, g u v :=
+  begin
+    apply finset.sum_congr rfl,
+    intros a a_in_A,
+    apply finset.sum_congr rfl,
+    intros b b_in_B,
+    exact eq_on_res a a_in_A b b_in_B,
+  end
 
   lemma superlemma3 {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)

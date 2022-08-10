@@ -509,10 +509,32 @@ def mk_rsn {V : Type*} [fintype V]
   (afn : active_flow_network V) : residual_network V
 := ⟨afn, mk_cf afn, rfl, λ u v, mk_cf afn u v > 0 , rfl ⟩
 
-inductive path {V : Type* } (is_edge : V -> V -> Prop) (a : V) : V → Prop
+universe u
+
+inductive path {V : Type u } (is_edge : V -> V -> Prop) (a : V) : V → Type (u + 1)
 | nil  : path a
 | cons : Π {b c : V}, path b → (is_edge b c) → path c
 
+inductive path' {V : Type u } (is_edge : V -> V -> Prop) (a : V) : V → Prop
+| nil  : path' a
+| cons : Π {b c : V}, path' b → (is_edge b c) → path' c
+
+lemma path_to_path' {V : Type u}
+  (is_edge : V -> V -> Prop)
+  {s : V} :
+  Π {t : V}, path is_edge s t ->
+  path' is_edge s t
+ | _ path.nil := path'.nil
+ | t (@path.cons _ _ _ x _ p is_edge) := path'.cons (path_to_path' p) is_edge
+
+lemma lajsdkflas {V : Type*}
+  (is_edge : V -> V -> Prop)
+  {s t : V}
+  (p : path is_edge s t):
+  path' is_edge s t :=
+  begin
+    exact path_to_path' is_edge p,
+  end
 -- @[instance] def foobarbaz {V : Type*} [inst : quiver.{0} V] [inst' : fintype V] [inst'' : has_singleton V (quiver (resnet V))]
 --   (afn : active_flow_network V)
 --   : quiver (resnet V) :=
@@ -528,7 +550,7 @@ inductive path {V : Type* } (is_edge : V -> V -> Prop) (a : V) : V → Prop
 --   := ⟨mk_cf afn, afn.network.source, afn.network.sink⟩
 def no_augumenting_path {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) : Prop
-  := ∀ t : V, path rsn.is_edge rsn.afn.network.source t → ¬( t = rsn.afn.network.sink)
+  := ∀ t : V, path' rsn.is_edge rsn.afn.network.source t → ¬( t = rsn.afn.network.sink)
 
 lemma residual_capacity_non_neg {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
@@ -559,6 +581,20 @@ begin
   },
 end
 
+noncomputable
+def augumenting_path_min_weight'' {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V)
+  (s : V) :
+  ℝ -> Π {t : V}, path rsn.is_edge s t -> ℝ
+  | weight _ path.nil := weight
+  | weight t (@path.cons _ _ _ t' _ p is_edge') :=
+  if (weight < rsn.f' t' t) && (rsn.f' t' t ≠ 0)
+  then augumenting_path_min_weight'' (rsn.f' t' t) p
+  else augumenting_path_min_weight'' weight p
+
+
+
+
 lemma superlemma2 {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
   : (is_max_flow_network rsn.afn) -> no_augumenting_path rsn
@@ -570,9 +606,9 @@ end
 section superlemma3
 
   noncomputable
-  def mk_S {V : Type*} [inst' : fintype V]
+  def mk_S {V : Type u} [inst' : fintype V]
     (rsn : residual_network V) : finset V :=
-    {x | path rsn.is_edge rsn.afn.network.source x}.to_finset
+    {x | (path' rsn.is_edge rsn.afn.network.source x)}.to_finset
 
   noncomputable
   def mk_cut_from_S {V : Type*} [inst' : fintype V]
@@ -584,7 +620,7 @@ section superlemma3
       rw hS,
       unfold mk_S,
       simp only [set.mem_to_finset, set.mem_set_of_eq],
-      exact path.nil,
+      exact path'.nil,
     end,
     begin
       rw hS,
@@ -608,7 +644,7 @@ section superlemma3
       rw hS at *,
       unfold mk_S at *,
       simp only [set.mem_to_finset, set.mem_set_of_eq, mem_sdiff, mem_univ, true_and] at *,
-      have tmp := path.cons h_u_in_S is_edge_u_v,
+      have tmp := path'.cons h_u_in_S is_edge_u_v,
       exact h_v_in_T tmp,
     end
 

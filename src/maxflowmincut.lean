@@ -19,15 +19,12 @@ open_locale classical
 --def aosdjfl : finset oier 
 --:= let x := ({oier.a} : finset oier)
 --   in xᶜ
+notation ` V' ` := univ
 
 structure strange_digraph (V : Type*)  :=
   (is_edge : V → V → Prop)
   (hnonsymmetric : ∀ u v : V, ¬ ((is_edge u v) ∧ (is_edge v u)))
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 848bb140f748c3a01f022c31013bd62e00cfd3cc
 structure capacity (V : Type*)
   extends strange_digraph V:=
   (c : V -> V -> ℝ)
@@ -57,7 +54,7 @@ structure active_flow_network (V : Type*)  [fintype V]
   (non_neg_flow : ∀ u v : V, f u v ≥ 0)
   (no_overflow : ∀ u v : V, f u v ≤ network.c u v)
   (conservation : ∀ v : V, 
-                  v ∈ (finset.univ : finset V) \ {network.source, network.sink} →
+                  v ∈ (V' : finset V) \ {network.source, network.sink} →
                   mk_out f {v} = mk_in f {v})
 
 noncomputable def F_value {V : Type*}  [fintype V] :
@@ -153,7 +150,6 @@ end
   ∑ v in finset.univ, (afn.f) p v = mk_out afn.f {p} :=
   by rw mk_out_single_node
 
-notation ` V' ` := univ
 
 lemma break_out_neg (a b : ℝ) : (-a) + -(b) = -(a + b) :=
 by ring

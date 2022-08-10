@@ -763,19 +763,36 @@ section superlemma3
 
     have subtract: ∀ x y : ℝ, (x=y) ↔ y-x=0 := begin intros x y, split, intro heq, linarith, intro heq, linarith, end,
 
-    have cf_vanishes_on_pipes: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.f' u v = 0 := sorry, 
+    have cf_vanishes_on_pipes: ∀u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.f' u v = 0 := sorry, 
     have cf_vanishes_on_pipes_spec: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, (rsn.afn.network.is_edge u v) → 
         (rsn.afn.network.c u v - rsn.afn.f u v = 0) := 
         begin
-          intros u u_in_S v v_in_T uv_is_edge,
-          sorry
+          intros u u_in_S v v_in_T is_edge,
+          have t: mk_cf rsn.afn u v = rsn.afn.network.c u v - rsn.afn.f u v := begin unfold mk_cf, simp only [is_edge, if_true], end,
+          rw ← t,
+          have r: mk_cf rsn.afn u v = rsn.f' u v := begin rw rsn.f_def, end,
+          rw r,
+          exact cf_vanishes_on_pipes u u_in_S v v_in_T,
         end,
     have eq_on_pipes: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.afn.f u v = rsn.afn.network.c u v := 
       begin 
         intros u u_in_S v v_in_T,
         cases classical.em (rsn.afn.network.is_edge u v),
         { rw subtract (rsn.afn.f u v) (rsn.afn.network.to_capacity.c u v),
-          sorry, },
+          have mk_cf_spec: (rsn.f' u v = rsn.afn.network.c u v - rsn.afn.f u v) 
+          := 
+            begin
+              rw rsn.f_def,
+              unfold mk_cf,
+              simp only [h, if_true],
+            end,
+          rw ← mk_cf_spec,
+          have h: rsn.f' u v = 0 := 
+          begin
+            exact cf_vanishes_on_pipes u u_in_S v v_in_T,
+          end,
+          exact h,
+          },
         { 
           rw rsn.afn.network.vanishes u v h,
           exact f_vanishes_outside_edge (rsn.afn) (u) (v) (h),
@@ -784,8 +801,7 @@ section superlemma3
         --have no_edge: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, ¬rsn.is_edge u v := sorry,
         --have f_prim_is_zero: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S, rsn.f' u v = 0 := sorry,
         --have connector_full_or_non_existent: ∀ u ∈ min_cut.S, ∀ v ∈ V' \ min_cut.S,  
-        --(rsn.afn.network.c u v = rsn.afn.f u v) ∨ (¬rsn.afn.network.is_edge u v)  := sorry,
-        sorry 
+        --(rsn.afn.network.c u v = rsn.afn.f u v) ∨ (¬rsn.afn.network.is_edge u v)  := sorry, 
       end,
     
     have no_backflow: ∀ u ∈ V' \ min_cut.S, ∀ v ∈ min_cut.S, rsn.afn.f u v = 0 := begin sorry end,
@@ -859,6 +875,8 @@ section superlemma3
       --end, 
     exact exists.intro min_cut cut_eq_flow,
   end
+
+
 
 -- lemma three_way_equiv (a b c : Prop) : (a -> b) -> (b -> c) -> (c -> a) -> ((a <-> b) ∧ (b <-> c) ∧ (c <-> a))
 -- :=

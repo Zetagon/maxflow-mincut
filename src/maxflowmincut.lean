@@ -519,6 +519,15 @@ def no_augumenting_path {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) : Prop
   := ∀ t : V, ∀ p : path rsn.is_edge rsn.afn.network.source t, ¬ (t = rsn.afn.network.sink)
 
+def path.in {V : Type u }
+  {is_edge : V -> V -> Prop}
+  (u v : V)
+  {s : V}
+  : ∀ {t : V}, path is_edge s t  -> Prop
+  | t (@path.nil  _ is_edge' a)  := u = v
+  | t (@path.cons _ _ _ t' _ p _)  := (u = t' ∧ v = t) ∨ (@path.in t' p)
+
+
 lemma residual_capacity_non_neg {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
   : ∀ u v : V,  0 ≤ rsn.f' u v :=

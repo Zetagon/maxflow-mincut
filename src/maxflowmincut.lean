@@ -2,6 +2,7 @@ import data.real.basic
 import data.set
 import tactic
 import data.finset
+import tactic.induction
 open finset
 
 
@@ -527,7 +528,6 @@ def path.in {V : Type u }
   | t (@path.nil  _ is_edge' a)  := u = v
   | t (@path.cons _ _ _ t' _ p _)  := (u = t' ∧ v = t) ∨ (@path.in t' p)
 
-
 lemma residual_capacity_non_neg {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
   : ∀ u v : V,  0 ≤ rsn.f' u v :=
@@ -557,6 +557,7 @@ begin
   },
 end
 
+@[simp]
 noncomputable
 def augumenting_path_min_weight {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
@@ -573,7 +574,56 @@ lemma min_weight {V : Type*} [inst' : fintype V]
   (s t : V)
   (p : path rsn.is_edge s t) :
   ∀ u v : V, path.in u v p -> augumenting_path_min_weight rsn 0 p ≤ rsn.f' u v :=
-  sorry
+begin
+  intros u v hin_p,
+  induction' p,
+  {
+    simp,
+    simp_rw [rsn.f_def, mk_cf],
+    cases classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge u v),
+    {
+      simp [h],
+      exact rsn.afn.no_overflow u v,
+    },
+    {
+      simp [h],
+      cases classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge v u),
+      {
+        simp [h_1],
+        exact rsn.afn.non_neg_flow v u,
+      },
+      {
+        simp [h_1],
+      }
+    }
+  },
+  {
+    unfold augumenting_path_min_weight,
+    simp,
+    cases classical.em (0 < rsn.f' b t ∧ ¬rsn.f' b t = 0),
+    {
+      simp [h_1],
+      sorry
+    },
+    {
+      simp [h_1],
+      exact ih u v,
+    }
+
+    -- simp_rw [rsn.f_def, mk_cf],
+    -- cases classical.em (rsn.afn.network.to_capacity.to_strange_digraph.is_edge u v),
+    -- {
+    --   simp [h_1],
+    --   cases classical.em (0 < rsn.f' b t ∧ ¬rsn.f' b t = 0),
+    --   {
+    --     simp [h_2],
+
+    --   },
+    --   {  }
+    -- },
+    -- {  }
+  }
+end
 
 
 

@@ -511,38 +511,17 @@ def mk_rsn {V : Type*} [fintype V]
 
 
 structure spath {V : Type*} [inst' : fintype V]
-                (is_graph_edge : V -> V -> Prop)
+                (is_edge : V -> V -> Prop)
                 (s t : V) :=
-  (is_path_edge : V -> V -> Prop)
-  (path_subset_graph : (∀ u v : V, is_path_edge u v -> is_graph_edge u v))
   (degree_two : (s = t) ∨
                 (∀ v ∈ (V' : finset V) \ {s, t},
-                  (∃! u : V, is_path_edge u v) ∧
-                  (∃! u : V, is_path_edge v u)))
+                  (∃! u : V, is_edge u v) ∧
+                  (∃! u : V, is_edge v u)))
 
-
-def spath.cons  {V : Type*} [inst' : fintype V]
-  (is_edge : V -> V -> Prop)
-  (s t' t : V)
-  (p : spath is_edge s t')
-  (hconnected : is_edge t' t) : spath is_edge s t :=
-  ⟨ begin
-    apply or.inr,
-    intros v hvin,
-    split,
-    {
-
-    }
-    end⟩
-
-def exists_path {V : Type*} [inst' : fintype V]
-  (rsn : residual_network V) (s t : V) : Prop
-  := ∃ f : V -> V -> Prop , ((∀ u v : V, f u v -> rsn.is_edge u v) ∧
-      ∃ p : spath f s t, true)
 
 def exists_augumenting_path {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) : Prop
-  := exists_path rsn rsn.afn.network.source rsn.afn.network.sink
+  := ∃ p : spath rsn.is_edge rsn.afn.network.source rsn.afn.network.sink, true
 
 lemma residual_capacity_non_neg {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
@@ -573,13 +552,23 @@ begin
   },
 end
 
+noncomputable
+def augumenting_path_min_weight'' {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V)
+  (s : V) :
+  ℝ -> Π {t : V}, path rsn.is_edge s t -> ℝ
+  | weight _ path.nil := weight
+  | weight t (@path.cons _ _ _ t' _ p is_edge') :=
+  if (weight < rsn.f' t' t) && (rsn.f' t' t ≠ 0)
+  then augumenting_path_min_weight'' (rsn.f' t' t) p
+  else augumenting_path_min_weight'' weight p
 
 
 
 
 lemma superlemma2 {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
-  : (is_max_flow_network rsn.afn) -> ¬augumenting_path rsn
+  : (is_max_flow_network rsn.afn) -> no_augumenting_path rsn
 :=
 begin
 sorry
@@ -590,30 +579,28 @@ section superlemma3
   noncomputable
   def mk_S {V : Type u} [inst' : fintype V]
     (rsn : residual_network V) : finset V :=
-    {x | exists_path rsn rsn.afn.network.source x}.to_finset
+    {x | (path' rsn.is_edge rsn.afn.network.source x)}.to_finset
 
   noncomputable
   def mk_cut_from_S {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)
-    (hno_augumenting_path : ¬exists_augumenting_path rsn)
+    (hno_augumenting_path : no_augumenting_path rsn)
     (S : finset V) (hS : S = mk_S rsn) : cut V :=
   ⟨rsn.afn.network, S, V' \ S,
     begin
       rw hS,
       unfold mk_S,
       simp only [set.mem_to_finset, set.mem_set_of_eq],
-      apply exists.intro,
-      { exact ⟨ by exact or.inl rfl,⟩},
-      { exact trivial, }
-
+      exact path'.nil,
     end,
     begin
       rw hS,
       unfold mk_S,
       simp only [mem_sdiff, mem_univ, set.mem_to_finset, set.mem_set_of_eq, true_and],
       intro p,
-      unfold exists_augumenting_path at hno_augumenting_path,
-      have tmp := hno_augumenting_path p,
+      unfold no_augumenting_path at hno_augumenting_path,
+      have tmp := hno_augumenting_path rsn.afn.network.sink p,
+      simp only [eq_self_iff_true, not_true] at tmp,
       exact tmp,
     end,
       rfl⟩
@@ -627,8 +614,7 @@ section superlemma3
       intros u h_u_in_S v h_v_in_T is_edge_u_v,
       rw hS at *,
       unfold mk_S at *,
-      -- simp only [set.mem_to_finset, set.mem_set_of_eq, mem_sdiff, mem_univ, true_and] at *,
-      simp at *,
+      simp only [set.mem_to_finset, set.mem_set_of_eq, mem_sdiff, mem_univ, true_and] at *,
       have tmp := path'.cons h_u_in_S is_edge_u_v,
       exact h_v_in_T tmp,
     end
@@ -770,7 +756,7 @@ section superlemma3
   lemma superlemma3 {V : Type*} [inst' : fintype V]
     (rsn : residual_network V)
     -- (hno_augumenting_path : ∀ s t : V, path rsn.is_edge s t → ¬(s = rsn.afn.network.source ∧ t = rsn.afn.network.sink))
-    (hno_augumenting_path : ¬augumenting_path rsn)
+    (hno_augumenting_path : no_augumenting_path rsn)
     : (∃c : cut V, cut_value c = F_value rsn.afn) :=
   begin
     let S : finset V := mk_S rsn,
@@ -915,8 +901,8 @@ end superlemma3
 
 theorem maxflow_mincut {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) :
-  (is_max_flow_network rsn.afn -> ¬augumenting_path rsn) ∧
-  (¬augumenting_path rsn -> (∃c : cut V, cut_value c = F_value rsn.afn)) ∧
+  (is_max_flow_network rsn.afn -> no_augumenting_path rsn) ∧
+  (no_augumenting_path rsn -> (∃c : cut V, cut_value c = F_value rsn.afn)) ∧
   ((∃c : cut V, cut_value c = F_value rsn.afn ∧ c.network = rsn.afn.network) -> is_max_flow_network rsn.afn)
 :=
 begin

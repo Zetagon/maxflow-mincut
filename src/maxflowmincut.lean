@@ -509,19 +509,48 @@ def mk_rsn {V : Type*} [fintype V]
   (afn : active_flow_network V) : residual_network V
 := ⟨afn, mk_cf afn, rfl, λ u v, mk_cf afn u v > 0 , rfl ⟩
 
+universe u
 
-structure spath {V : Type*} [inst' : fintype V]
-                (is_edge : V -> V -> Prop)
-                (s t : V) :=
-  (degree_two : (s = t) ∨
-                (∀ v ∈ (V' : finset V) \ {s, t},
-                  (∃! u : V, is_edge u v) ∧
-                  (∃! u : V, is_edge v u)))
+inductive path {V : Type u } (is_edge : V -> V -> Prop) (a : V) : V → Type (u + 1)
+| nil  : path a
+| cons : Π {b c : V}, path b → (is_edge b c) → path c
+
+inductive path' {V : Type u } (is_edge : V -> V -> Prop) (a : V) : V → Prop
+| nil  : path' a
+| cons : Π {b c : V}, path' b → (is_edge b c) → path' c
+
+lemma path_to_path' {V : Type u}
+  (is_edge : V -> V -> Prop)
+  {s : V} :
+  Π {t : V}, path is_edge s t ->
+  path' is_edge s t
+ | _ path.nil := path'.nil
+ | t (@path.cons _ _ _ x _ p is_edge) := path'.cons (path_to_path' p) is_edge
+
+lemma lajsdkflas {V : Type*}
+  (is_edge : V -> V -> Prop)
+  {s t : V}
+  (p : path is_edge s t):
+  path' is_edge s t :=
+  begin
+    exact path_to_path' is_edge p,
+  end
+-- @[instance] def foobarbaz {V : Type*} [inst : quiver.{0} V] [inst' : fintype V] [inst'' : has_singleton V (quiver (resnet V))]
+--   (afn : active_flow_network V)
+--   : quiver (resnet V) :=
+-- { hom =  λ u  v, mk_cf afn u v > 0 }
 
 
-def exists_augumenting_path {V : Type*} [inst' : fintype V]
+
+
+-- noncomputable
+-- def mk_residual_network {V : Type*} [inst : quiver.{0} V] [inst' : fintype V]
+--   (afn : active_flow_network V)
+--   : residual_network V
+--   := ⟨mk_cf afn, afn.network.source, afn.network.sink⟩
+def no_augumenting_path {V : Type*} [inst' : fintype V]
   (rsn : residual_network V) : Prop
-  := ∃ p : spath rsn.is_edge rsn.afn.network.source rsn.afn.network.sink, true
+  := ∀ t : V, path' rsn.is_edge rsn.afn.network.source t → ¬( t = rsn.afn.network.sink)
 
 lemma residual_capacity_non_neg {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)

@@ -558,15 +558,22 @@ begin
 end
 
 noncomputable
-def augumenting_path_min_weight'' {V : Type*} [inst' : fintype V]
+def augumenting_path_min_weight {V : Type*} [inst' : fintype V]
   (rsn : residual_network V)
-  (s : V) :
+  {s : V} :
   ℝ -> Π {t : V}, path rsn.is_edge s t -> ℝ
   | weight _ path.nil := weight
   | weight t (@path.cons _ _ _ t' _ p is_edge') :=
   if (weight < rsn.f' t' t) && (rsn.f' t' t ≠ 0)
-  then augumenting_path_min_weight'' (rsn.f' t' t) p
-  else augumenting_path_min_weight'' weight p
+  then augumenting_path_min_weight (rsn.f' t' t) p
+  else augumenting_path_min_weight weight p
+
+lemma min_weight {V : Type*} [inst' : fintype V]
+  (rsn : residual_network V)
+  (s t : V)
+  (p : path rsn.is_edge s t) :
+  ∀ u v : V, path.in u v p -> augumenting_path_min_weight rsn 0 p ≤ rsn.f' u v :=
+  sorry
 
 
 

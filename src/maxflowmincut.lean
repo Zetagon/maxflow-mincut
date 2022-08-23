@@ -481,8 +481,9 @@ lemma superlemma_1  {V : Type*}  [inst' : fintype V]
 lemma imp_is_trans {p : Prop} {q : Prop} {r : Prop} (h_1: p → q) (h_2: q → r): (p → r)
 := 
 begin
-  intro p,
-  exact h_2(h_1(p)),
+  exact h_2 ∘ h_1,
+  --intro p,
+  --exact h_2(h_1(p)),
 end
 
 noncomputable

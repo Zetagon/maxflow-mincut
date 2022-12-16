@@ -1,0 +1,467 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{mall}
+
+\title{\line(1, 0){410}\\Max-flow min-cut}
+\author{LEO and BOSS}
+\date{June 2022\\\line(1, 0){410}}
+
+\begin{document}
+
+\maketitle
+\large
+
+\tableofcontents
+
+\section{Definitions: Directed graphs, flows and cuts}
+\subsection{Directed graph}
+\begin{definition}
+    A pair of the form $(V, E)$, where
+    \begin{itemize}
+        \item $V$ is a set, and
+        \item $E \subset V \times V$, such that $(u, v) \in E \implies (v, u) \not\in E$
+    \end{itemize}
+    is called a \textit{directed graph}.
+\end{definition}
+
+\subsection{Flows}
+\begin{definition}
+    Suppose $G=(V, E)$ is a directed graph and $f: V \times V \to \mathbf{R}$ a function that vanishes on $(V \times V) \backslash E$. Then, we define the functions $\texttt{In}_f: \mathcal{P}(V) \to \mathbf{R}$ and $\texttt{Out}_f: \mathcal{P}(V) \to \mathbf{R}$ as follows:
+    \begin{align*}
+        &\texttt{In}_f(S) = \sum \{f[(u, v)]: (u, v) \in (V \backslash S) \times S\}, \text{ and}\\
+        &\texttt{Out}_f(S) = \sum \{f[(u, v)]: (u, v) \in S \times (V \backslash S)\}.
+    \end{align*}
+\end{definition}
+
+\begin{definition}
+    Let $G=(V, E)$ be a directed graph. A function $c: V \times V \to \mathbf{R}_{\geq 0}$ that satisfies
+    \begin{itemize}
+        \item $c(e) > 0$ if $e \in E$, and
+        \item $c(e) = 0$ otherwise
+    \end{itemize}
+    is called a \textit{capacity function on $G$}.
+\end{definition}
+
+\begin{definition}
+    The quintuple $(V, E, c, s, t)$ is called a \textit{flow network} if $G=(V, E)$ is a directed graph, $c: V \times V \to \mathbf{R}_{\geq 0}$ is a capacity function on $G$ and $s, t \in V$ are distinct.
+\end{definition}
+
+\begin{definition}
+    Suppose $N=(V, E, c, s, t)$ is a flow network. If $f: E \to \mathbf{R}$ is such that
+    \begin{itemize}
+        \item $e \in E \implies f(e) \geq 0$,
+        \item $e \in E \implies f(e) \leq c(e)$, and
+        \item $v \in V \backslash \{s, t\} \implies \texttt{In}_f(\{v\}) = \texttt{Out}_f(\{v\})$
+    \end{itemize}
+    it is called a \textit{flow on $N$}.
+\end{definition}
+
+\begin{definition}
+    The sextuple $A=(V, E, c, s, t, f)$ is called an \textit{active flow network} if $N=(V, E, c, s, t)$ is a flow network and $f$ is a flow on $N$.
+\end{definition}
+
+\begin{definition}
+    Let $\texttt{ActiveFlows}_N$ denote the set of active flows on $N=(V, E, c, s, t)$. Define the function $\texttt{F-value}: \texttt{ActiveFlows}_N \to \mathbf{R}$ as $\texttt{F-value}(A)=\texttt{Out}_f(s) - \texttt{In}_f(s)$, where $A=(V, E, c, s, t, f)$ is an active flow.
+\end{definition}
+
+
+\subsection{Cuts}
+\begin{definition}
+    Let $N=(V, E, c, s, t)$ be a flow network. A tuple $(S, T)$ is called an \textit{$s$-$t$-cut of $N$} if
+    \begin{itemize}
+        \item $S \cup T = V$,
+        \item $S \cap T = \emptyset$,
+        \item $s \in S$ and $t \in T$.
+    \end{itemize}
+\end{definition}
+
+\begin{definition}
+    Let $\texttt{Cuts}_N$ denote the set of $s$-$t$-cuts of $N=(V, E, c, s, t)$. The function $c_{\texttt{Cuts}}:\texttt{Cuts}_N \to \mathbf{R}_{\geq 0}$ is defined as
+    \begin{align*}
+        c_{\texttt{Cuts}}[(S, T)] &= \texttt{Out}_c(S).
+        %&= \sum \{c(u, v): (u, v) \in S \times T\}
+    \end{align*}
+    The \textit{value} of an $s$-$t$-cut $(S, T)$ is defined as $c_{\texttt{Cuts}}[(S, T)]$.
+\end{definition}
+
+
+\newpage
+\section{Lemma 77}
+
+\begin{lemma}\label{global_conservation_of_flow}
+    For an active flow $A=(V, E, c, s, t, f)$ and $S \subset V \backslash \{s, t\}$, we have that
+    \begin{align*}
+        \texttt{In}_f(S)-\texttt{Out}_f(S) = \sum \{\texttt{In}_f(\{u\}) - \texttt{Out}_f(\{u\}): u \in S\}.
+    \end{align*}
+\end{lemma}
+\begin{proof}
+    First, we note the following:
+    \begin{align*}
+        &\texttt{In}_f(S) + \sum \{f(u, v) : (u, v) \in S \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in (V \backslash S) \times S\} + \sum \{f(u, v) : (u, v) \in S \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in (V \backslash S) \times S\} \sqcup \{f(u, v) : (u, v) \in S \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in (V \backslash S) \times S \cup (S \times S)\}\\
+        =& \sum \{f(u, v) : (u, v) \in V \times S\}
+    \end{align*}
+    and similarly:
+    \begin{align*}
+        &\texttt{Out}_f(S) + \sum \{f(u, v) : (u, v) \in S \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in S \times (V \backslash S)\} + \sum \{f(u, v) : (u, v) \in S \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in S \times (V \backslash S)\} \sqcup \{f(u, v) : (u, v) \in S \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in S \times (V \backslash S) \cup (S \times S)\}\\
+        =& \sum \{f(u, v) : (u, v) \in S \times V\}\\
+        =& \sum \{f(v, u) : (v, u) \in S \times V\}.
+    \end{align*}
+    We thus obtain that
+    \begin{align*}
+        \texttt{In}_f(S)-\texttt{Out}_f(S) =& \texttt{In}_f(S)-\texttt{Out}_f(S) + \sum \{f(u, v) : (u, v) \in S \times S\}\\ &- \sum \{f(u, v) : (u, v) \in S \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in V \times S\} - \sum \{f(v, u) : (v, u) \in S \times V\}\\
+        =& \sum_{v \in S} \left(\sum \{f(u, v) : u \in V\} - \sum \{f(v, u) : u \in V\}\right)\\
+        =& \sum_{v \in S} (\texttt{In}_f(\{v\}) - \texttt{Out}_f(\{v\}))\\
+        =& \sum_{v \in S} 0.
+    \end{align*}
+\end{proof}
+
+\begin{lemma}\label{conservationOfFlow}
+    Suppose that $A=(V, E, c, s, t, f)$ is an active flow. Let $S \subset V \backslash \{s, t\}$. Then $\texttt{In}_f(S) = \texttt{Out}_f(S)$.
+\end{lemma}
+\begin{proof}[Not so formal proof]
+    Consider the difference $\texttt{In}_f(S)-\texttt{Out}_f(S)$ and notice that it may equivalently be rewritten as \begin{align}\label{difference}
+        \sum \{\texttt{In}_f(\{u\}) - \texttt{Out}_f(\{u\}): u \in S\};
+    \end{align}
+    indeed, if $u, v \in S$ and $(u, v) \in E$, then, in (\ref{difference}), the terms $f(u, v)$ and $f(v, u)$ cancel, and so we are left with $\texttt{In}_f(S)-\texttt{Out}_f(S)$. Since (\ref{difference}) evaluates to $0$, per definition, the statement follows.
+\end{proof}
+
+\begin{lemma}\label{strange_algebraic_property}
+    Suppose that $A = (V, E, c, s, t, f)$ is an active flow and let $S, T \subset V$ be disjoint. Then the following equality holds:
+    \begin{align*}
+        \fout_f(S \cup T) - \fin_f(S \cup T) = \fout_f(S) + \fout(T) - \fin_f(S) - \fin_f(T).
+    \end{align*}
+\end{lemma}
+\begin{proof}
+    We have the following chain of equalities:
+    \begin{align*}
+        &\fout_f(S \cup T) + \sum \{f(u, v) : (u, v) \in S \times T\} + \sum \{f(u, v) : (u, v) \in T \times S\}\\
+        =&\sum \{f(u, v) : (u, v) \in (S \cup T) \times V \backslash (S \cup T)\} + \sum \{f(u, v) : (u, v) \in S \times T\}\\
+        &+ \sum \{f(u, v) : (u, v) \in T \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in (S \times V \backslash (S \cup T)) \cup (T \times V \backslash (S \cup T))\}\\
+        &+ \sum \{f(u, v) : (u, v) \in S \times T\} + \sum \{f(u, v) : (u, v) \in T \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in S \times V \backslash (S \cup T)\} + \sum \{f(u, v) : (u, v) \in T \times V \backslash (S \cup T)\}\\
+        &+ \sum \{f(u, v) : (u, v) \in S \times T\} + \sum \{f(u, v) : (u, v) \in T \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in (S \times V \backslash (S \cup T)) \cup (S \times T)\}\\
+        &+ \sum \{f(u, v) : (u, v) \in (T \times V \backslash (S \cup T) \cup T \times S\}\\
+        =& \sum \{f(u, v) : (u, v) \in S \times V \backslash S\}
+        + \sum \{f(u, v) : (u, v) \in T \times V \backslash T\}\\
+        =& \fout_f(S) + \fout_f(T).
+    \end{align*}
+    Analagously we obtain
+    \begin{align*}
+        &\fin_f(S \cup T) + \sum \{f(u, v) : (u, v) \in S \times T\} + \sum \{f(u, v) : (u, v) \in T \times S\}\\
+        =& \fin_f(S) + \fin_f(T).
+    \end{align*}
+    We thus obtain that \begin{align*}
+        \fout_f(S \cup T) - \fin_f(S \cup T) = \fout_f(S) + \fout_f(T) - \fin_f(S) - \fin_f(T).
+    \end{align*}
+\end{proof}
+
+\begin{lemma}\label{out_is_in}
+    Suppose that $A = (V, E, c, s, t, f)$ is an active flow and let $S \subset V$. Then $\fout_f(S) = \fin_f(V \backslash S)$.
+\end{lemma}
+\begin{proof}
+    By definition we have that
+    \begin{align*}
+        \fout_f(S) &= \sum \{f(u, v): (u, v) \in S \times V \backslash S\}\\
+        &= \sum \{f(v, u): (u, v) \in V \backslash S \times S\}\\
+        &= \fin_f(V \backslash S).
+    \end{align*}
+\end{proof}
+
+\begin{foljdsats}\label{in_is_out}
+    Let $A$, $S$ be as in the above lemma. Then $\fin_f(S) = \fout_f(V \backslash T)$.
+\end{foljdsats}
+
+\begin{lemma}\label{flow_value_globalized}
+    Suppose that $A = (V, E, c, s, t, f)$ is an active flow and let $(S, T)$ be an $s$-$t$-cut thereof. Then the following equality holds:
+    \begin{align*}
+        \fout_f(\{s\}) - \fin_f(\{s\}) = \fout_f(S) - \fin_f(S).
+    \end{align*}
+\end{lemma}
+\begin{proof}
+    By lemma \ref{out_is_in} we have that
+    \begin{align}\label{S_outflow}
+        \fout_f(S \backslash \{s\}) = \fin_f(T \cup \{s\})
+    \end{align}
+    and by följdsats \ref{in_is_out} we have that
+    \begin{align}\label{S_inflow}
+        \fin_f(S \backslash \{s\}) = \fout_f(T \cup \{s\}).
+    \end{align}
+    By considering \ref{S_outflow} - \ref{S_inflow}, using lemma \ref{global_conservation_of_flow}, lemma \ref{strange_algebraic_property} (since $\{s\} \cap T = \emptyset$ as $s \in S$, with $S \cap T = \emptyset$) and lemma \ref{out_is_in} (in that order) we obtain the following chain of equalities:
+    \begin{align*}
+        0 &= \fout_f(S \backslash \{s\}) - \fin_f(S \backslash \{s\})\\
+        &= \fin_f(T \cup \{s\}) - \fout_f(T \cup \{s\})\\
+        &= \fin_f(T) + \fin_f(\{s\}) - \fout_f(T) - \fout_f(\{s\})\\
+        &= \fout_f(S) + \fin_f(\{s\}) - \fin_f(S) - \fout_f(\{s\})
+    \end{align*}
+    which rearranges to the desired expression.
+\end{proof}
+
+\begin{lemma}\label{bounded_by_pipes}
+    Suppose that $A=(V, E, c, s, t, f)$ is an active flow and $S \subset T$. Then $\fout_f(S) \leq \fout_c(S)$.
+\end{lemma}
+\begin{proof}
+    By definition we have the following:
+    \begin{align*}
+        \fout_f(S) &= \sum \{f(u, v) : (u, v) \in S \times (V \backslash S)\}\\
+        &\leq \sum \{c(u, v) : (u, v) \in S \times (V \backslash S)\}\\
+        &= \fout_c(S).
+    \end{align*}
+\end{proof}
+
+\begin{lemma}\label{flows<=cuts}
+    Suppose that $A=(V, E, c, s, t, f)$ is an active flow and $C=(S, T)$ an $s$-$t$-cut. Then $\texttt{F-value}(A) \leq c_{\texttt{Cuts}}(C)$.
+\end{lemma}
+\begin{proof}[Not so formal proof]
+    From lemma \ref{flow_value_globalized}, we realize that $\texttt{F-value}(A) = \fout_f(S) - \fin_f(S)$. By trivial inequality and then lemma \ref{bounded_by_pipes}, we obtain \begin{align*}
+        \fout_f(S) - \fin_f(S) \leq \fout_f(S) \leq \fout_c(S) = c(S, T)
+    \end{align*}
+    as desired.
+    %By definition, we have the following
+    %\begin{align*}
+    %    \texttt{In}_f(S \backslash \{s\}) &= \sum \{f(u, v): (u, v) \in (V \backslash (S \backslash \{s\})) \times S \backslash \{s\}\}\\
+    %    &= \sum \{f(u, v): (u, v) \in ((V \backslash (S \backslash \{s\})) \backslash \{s\}) \times S \backslash \{s\}\} \cup \{f(u, v): (u, v) \in \{s\} \times S \backslash \{s\}\}\\
+    %    &= \sum \{f(u, v): (u, v) \in ((V \backslash S) \times S \backslash \{s\}\} \cup \{f(u, v): (u, v) \in \{s\} \times S \backslash \{s\}\}\\
+    %    &= \sum \{f(u, v): (u, v) \in (T \times V \backslash T)\} \cup \{f(u, v): (u, v) \in \{s\} \times S \backslash \{s\}\}\\
+    %    &= \texttt{Out}_f(T) + \texttt{Out}_f(\{s\}).
+    %\end{align*}
+    %Analagously we obtain $\texttt{Out}_f(S \backslash \{s\}) = \texttt{In}_f(T) + \texttt{In}_f(\{s\})$. With lemma \ref{conservationOfFlow}, we conclude that $\texttt{Out}_f(T) + \texttt{Out}_f(\{s\}) = \texttt{In}_f(T) + \texttt{In}_f(\{s\})$, and so
+    %\begin{align*}
+    %    \texttt{In}_f(\{s\}) - \texttt{Out}_f(\{s\}) &= \texttt{In}_f(T) - \texttt{Out}_f(T)\\
+    %    &\leq \texttt{In}_f(T)\\
+    %    &= \sum \{f(u, v): (u, v) \in (V \backslash T) \times T\}\\
+    %    &= \sum \{f(u, v): (u, v) \in S \times T\}\\
+    %    &\leq \sum \{c(u, v): (u, v) \in S \times T\}\\
+    %    &\leq c(S, T)
+    %\end{align*}
+    %where $\texttt{F-value}(A) = \texttt{In}_f(\{s\}) - \texttt{Out}_f(\{s\})$.
+\end{proof}
+
+\begin{definition}
+    $A : \texttt{ActiveFlows}$ is \textit{maximal} if $\forall A': \texttt{ActiveFlows} (A'.\text{Flow network} = A.Network \to \texttt{F-value}(A') \leq \texttt{F-value}(A))$.
+\end{definition}
+
+\begin{definition}
+    $C: \texttt{Cuts}$ is \textit{minimal} if $\forall C' : \texttt{Cuts}(C'.Network = C.Network \to c_{\texttt{Cuts}}(C') \geq c_{\texttt{Cuts}}(C))$.
+\end{definition}
+
+\begin{superlemma}\label{superlemma1}
+    Let $A=(V, E, c, s, t, f)$ be an active flow and $C$ be an $s$-$t$-cut of $N=(V, E, c, s, t)$. If $C_{\texttt{Cuts}}(C)=\texttt{F-value}(A)$, then $A$ is maximal\footnote{Some overloading required; a flow $A$ is maximal if for any other active flow $A'=(V, E, c, s, t, f')$, we have $\texttt{F-value}(f) \geq \texttt{F-value}(f')$.} and $C$ is minimal.
+\end{superlemma}
+\begin{proof}[Not so formal proof]
+    Let $A'$ be an active flow. By lemma \ref{flows<=cuts}, we have that $\texttt{F-value}(A') \leq c_{\texttt{Cuts}}(C)$, which can be rewritten as $\texttt{F-value}(A') \leq \texttt{F-value}(A)$. Next, if we let $C'$ be some cut, then lemma \ref{flows<=cuts} yield $\texttt{F-value}(A) \leq c_{\texttt{Cuts}}(C')$, which can be rewritten as $c_{\texttt{Cuts}}(C) \leq c_{\texttt{Cuts}}(C')$.
+\end{proof}
+
+\section{Lemma 81}
+\subsection{Definitions: Residual network}
+\begin{definition}
+    \textit{Directed multigraph}
+\end{definition}
+\begin{definition}
+    \textit{Path in a multigraph}
+\end{definition}
+
+\begin{definition}
+    For a path $p$ in a weighted directed multigraph, we define $\omega_p$ as the smallest weight in $p$.
+\end{definition}
+
+\begin{definition}
+    Suppose that $A=(V, E, c, s, t, f)$ is an active flow. Define the function $c_f: E \to \mathbf{R}$ as follows:
+    \begin{align*}
+        c_f(u, v) =
+        \begin{cases}
+            c(u, v)-f(u, v), & \text{if } (u, v) \in E\\
+            f(v, u), & \text{if } (v, u) \in E\\
+            0, & \text{otherwise}.
+        \end{cases}
+    \end{align*}
+    Next, form the set
+    \begin{align*}
+        E' = \{(u, v): c_f(u, v) \neq 0\}.
+    \end{align*}
+    The triple $A_f=(V, E', c_f, s, t)$ is called \textit{the residual network of $A$}.
+    %\textit{Residual network}
+\end{definition}
+
+\begin{definition}
+    Let $A_f = (V, E', c_f, s, t)$ be the residual network of $A$, then the tuple $(V, E')$ is a multigraph. A path in $(V, E')$, from $s$ to $t$, is called an \textit{augmenting path in $A_f$}.
+\end{definition}
+
+\begin{definition}
+    Suppose that $A_f$ is a residual network and $p$ an augmenting path thereof.
+\end{definition}
+
+\begin{definition}
+    Suppose that $A_f = (V, E', c_f, s, t)$ is the residual network of $A$. Furthermore, let $p$ be an augmenting path in $A_f$. We then define \begin{align*}
+        f_{\textsc{new}}(u, v) = \begin{cases}
+            f(u, v) + \omega_p, &(u, v) \in E \wedge (u, v) \in E(p).\\
+            f(u, v) - \omega_p, &(u, v) \in E \wedge (v, u) \in E(p)\\
+            f(u, v), &(u, v) \in E \wedge (v, u), (u, v) \not\in E(p)\\
+            0, &\text{else}.
+        \end{cases}
+    \end{align*}
+\end{definition}
+
+\begin{lemma}[Non-negative]
+    Let $A=(V, E, c, s, t, f)$ be an active flow. Then $\forall u, v \in V : f_{\textsc{new}}(u, v) \geq 0$.
+\end{lemma}
+\begin{proof}
+    Since $\omega_p > 0$, all cases of edges $(u, v)$, but the one saying $(u, v) \in E \wedge (v, u) \in E(p)$, are trivial. We therefore consider such an edge.
+
+    From the assumption, we conclude that $c_f(v, u) = f(u, v)$. By the minimality of $\omega_p$, we have that $m_p \leq f(u, v)$ and so $0 \leq f(u, v) - \omega_p$.
+\end{proof}
+
+\begin{lemma}[No-overflow]
+    Let $A=(V, E, c, s, t, f)$ be an active flow. Then $\forall u, v \in V : f_{\textsc{new}}(u, v) \leq c(u, v)$.
+\end{lemma}
+\begin{proof}
+    Since $\omega_p > 0$, all cases of edges $(u, v)$, but the one saying $(u, v) \in E \wedge (u, v) \in E(p)$, are trivial. We therefore consider such an edge.
+
+    From the assumption, we conclude that $c_f(u, v) = c(u, v) - f(u, v)$. By the minimality of $\omega_p$, we have that $m_p \leq c(u, v) - f(u, v)$ and so $f(u, v) + \omega_p \leq c(u, v)$.
+\end{proof}
+
+\begin{align*}
+    \hline
+\end{align*}
+\begin{lemma}
+    Suppose that $v \in V \backslash \{s, t\}$ and $(u, v) \in E(p)$ and $(v, w) \in E(p)$. Then, if $(u, v) \in E \wedge (v, w) \in E$, we have
+    \begin{itemize}
+        \item $\fout_{f_{\textsc{new}}}(v) = \fout_{f}(v)+f_{\textsc{new}}(u, v) - f(u, v)$
+
+        \item $\fin_{f_{\textsc{new}}}(v) =q \fin_{f}(v)+f_{\textsc{new}}(v, w) - f(v, w)$
+    \end{itemize}
+\end{lemma}
+
+\begin{lemma}
+    Suppose that $v \in V \backslash \{s, t\}$ and $(u, v) \in E(p)$ and $(v, w) \in E(p)$. Then, if $(u, v) \not\in E \wedge (v, w) \in E$, we have
+    \begin{itemize}
+        \item $\fout_{f_{\textsc{new}}}(v) = \fout_{f}(v)+f_{\textsc{new}}(u, v) - f(u, v)$
+
+        \item $\fin_{f_{\textsc{new}}}(v) = \fin_{f}(v)$
+    \end{itemize}
+\end{lemma}
+
+\begin{lemma}[Conservation of flow]
+    Let $A=(V, E, c, s, t, f)$ be an active flow. Then $\forall u \in V \backslash \{s, t\} : \texttt{In}_{f_{\textsc{new}}}(u) = \texttt{Out}_{f_{\textsc{new}}}(u)$.
+\end{lemma}
+\begin{proof}
+    Suppose that $v \in V \backslash \{s, t\}$ and $(u, v) \in E(p)$ and $(v, w) \in E(p)$. We distinguish and prove the assertion for four cases:
+    \begin{itemize}
+        \item $(u, v) \in E \wedge (v, w) \in E$: Then
+        \begin{align*}
+            \fout_{f_{\textsc{new}}}(v) - \fin_{f_{\textsc{new}}}(v) =& (\fout_{f}(v)+f_{\textsc{new}}(u, v) - f(u, v))\\
+            &- (\fin_{f}(v)+f_{\textsc{new}}(v, w) - f(v, w))\\
+            =& (\fout_{f}(v)+\omega_p) - (\fin_{f}(v)+\omega_p)\\
+            &= \fout_{f}(v)- \fin_{f}(v)\\
+            &= 0.
+        \end{align*}
+
+        \item $(u, v) \not\in E \wedge (v, w) \in E$: Then
+        \begin{align*}
+            \fout_{f_{\textsc{new}}}(v) - \fin_{f_{\textsc{new}}}(v) =& (\fout_{f}(v)+f_{\textsc{new}}(v, u) - f(v, u)+f_{\textsc{new}}(v, w) - f(v, w))
+            - \fin_{f}(v)\\
+            =& \fout_{f}(v) -(\fin_{f}(v)-\omega_p+\omega_p)\\
+            &= \fout_{f}(v)- \fin_{f}(v)\\
+            &= 0.
+        \end{align*}
+
+        \item $(u, v) \in E \wedge (v, w) \not\in E$: Then
+        \begin{align*}
+            \fout_{f_{\textsc{new}}}(v) - \fin_{f_{\textsc{new}}}(v) =& \fout_{f}(v)\\
+            &- (\fin_{f}(v)+f_{\textsc{new}}(u, v) - f(u, v)+f_{\textsc{new}}(v, w) - f(v, w))\\
+            =& \fout_{f}(v) - (\fin_{f}(v)+\omega_p-\omega_p)\\
+            =& \fout_{f}(v)- \fin_{f}(v)\\
+            =& 0.
+        \end{align*}
+
+
+        \item $(u, v) \not\in E \wedge (v, w) \not\in E$: Then \begin{align*}
+            \fout_{f_{\textsc{new}}}(v) - \fin_{f_{\textsc{new}}}(v) =& (\fout_{f}(v)+f_{\textsc{new}}(u, v) - f(u, v))\\
+            &- (\fin_{f}(v)+f_{\textsc{new}}(v, w) - f(v, w))\\
+            =& (\fout_{f}(v)-\omega_p) - (\fin_{f}(v)-\omega_p)\\
+            &= \fout_{f}(v)- \fin_{f}(v)\\
+            &= 0.
+        \end{align*}
+    \end{itemize}
+\end{proof}
+
+
+\begin{superlemma}\label{superlemma2}
+    Let $A$ be an active flow and $A_f$ its residual network. If there is an augmenting path in $A_f$, then $A$ is not maximal\footnote{Maximal with respect to $\texttt{F-value}.$}.
+\end{superlemma}
+
+\begin{foljdsats}
+    Let $A$ be an active flow and $A_f$ its residual network. If $A$ is maximal, then $A_f$ contains no augmenting path.
+\end{foljdsats}
+\begin{proof}
+    This is the contraposition of superlemma \ref{superlemma2}.
+\end{proof}
+
+
+
+\section{Lemma 'extra'}
+%\begin{definition}
+%    Let $N=(V, E, c, s, t)$ be a flow network. The set $\{u: \}$
+%\end{definition}
+\begin{lemma}\label{make_cut_from_S}
+    Let $A=(V, E, c, s, t, f)$ be an active flow that does not contain an augmenting path. If $S := \{u \in V: \exists \text{path from $s$ to $u$}\}$ and $T := V \backslash S$. Then $(S, T)$ is an $s$-$t$-cut.
+\end{lemma}
+
+\begin{lemma}
+    Let $A$, $S$ and $T$ be as in lemma \ref{make_cut_from_S}. Then $(u, v) \not\in A_f(E)$ (here $A_f(E)$ denotes the edge set of the residual network of $A$).
+\end{lemma}
+
+\begin{lemma}
+    Let $A=(V, E, c, s, t, f)$ be an active flow that does not contain an augmenting path and $(S, T)$ a cut thereof such that $(u, v) \in S \times T \implies (u, v) \not\in A_f$. Then $(u, v) \in S \times T \implies c_f(u, v) = 0$.
+\end{lemma}
+
+\begin{lemma}
+    Let $A=(V, E, c, s, t, f)$ be an active flow that does not contain an augmenting path. Suppose that $A, B \subset V$ are disjoint and satisfy $(u, v) \in A \times B \implies c_f(u, v)=0$. Then the following holds
+    \begin{enumerate}[label = (\alph*)]
+        \item $(u, v) \in A \times B \implies f(u, v)=c(u, v)$, and
+        \item $(u, v) \in B \times A \implies f(u, v) = 0$.
+    \end{enumerate}
+\end{lemma}
+
+\begin{lemma}
+    Let $A=(V, E, c, s, t, f)$ be an active flow that does not contain an augmenting path and $(S, T)$ a cut thereof that satisfies $(u, v) \in T \times S \implies f(u, v)=0$. Then $\texttt{F-value}(A) = \fout_{f}(S)$.
+\end{lemma}
+
+\begin{superlemma}\label{superlemma3}
+    Let $A=(V, E, c, s, t, f)$ be an active flow that does not contain an augmenting path. Then there is an $s$-$t$-cut $C$ such that $\texttt{F-value}(A)=c(C)$.
+\end{superlemma}
+\begin{proof}[Not so formal-proof]
+    Define $S=\{u: \exists \text{augmenting path from $s$ to $u$}\}$ and $T=V \backslash S$. Since $A$ contains no augmenting path, $T$ must be non-empty. By the choice of $S$, we must have that $(u, v) \in S \times T \implies f(u, v)=c(u, v)$. By lemma \ref{conservationOfFlow} we have that
+    \begin{align*}
+        \texttt{F-value}(A)=\sum \{f(u, v): (u, v) \in S \times T\},
+    \end{align*}
+    which can then be rewritten as
+    \begin{align*}
+        \texttt{F-value}(A) &= \sum \{c(u, v): (u, v) \in S \times T\}\\
+        &= c_{\texttt{Cuts}}(S, T).
+    \end{align*}
+    \end{proof}
+
+\section{Ford-Fulkerson}
+\begin{sats}
+    Let $A=(V, E, c, s, t, f)$ be an active flow. Then the following are equivalent:
+    \begin{enumerate}[label = (\roman*)]
+        \item\label{(i)} $A$ is maximal.
+        \item\label{(ii)} $A_f$ contains no augmenting path.
+        \item\label{(iii)} There is an $s-t$-cut on $N=(V, E, c, s, t)$ such that $c_{\texttt{cuts}}([(S, T)]) = \texttt{F-value}(A)$.
+    \end{enumerate}
+\end{sats}
+\begin{proof}
+    The statement $\ref{(i)} \implies \ref{(ii)}$ is the contraposition of superlemma (\ref{superlemma2}).
+
+    $\ref{(ii)} \implies \ref{(iii)}$ follows from superlemma \ref{superlemma3} and $\ref{(iii)} \implies \ref{(i)}$ from superlemma \ref{superlemma1}.
+\end{proof}
+\end{document}

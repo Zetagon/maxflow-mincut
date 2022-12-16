@@ -1,0 +1,88 @@
+\usepackage{setspace}
+
+\usepackage[english]{babel}
+\usepackage[usenames, dvipsnames]{xcolor}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage[margin = 1.4in]{geometry}
+\usepackage[most]{tcolorbox}
+\renewcommand{\qedsymbol}{////}
+\newcommand{\abs}{\texttt{abs}}
+\newcommand{\fout}{\texttt{Out}}
+\newcommand{\fin}{\texttt{In}}
+
+\usepackage{enumitem}
+
+\newtheoremstyle{thm_mystyle}%
+{3pt}% Space above
+{3pt}% Space below
+{\itshape\color{red}}% Body font
+{}% Indent amount
+{\bfseries\color{red}}% Theorem head font
+{.}% Punctuation after theorem head
+{.5em}% Space after theorem head
+{}
+\theoremstyle{thm_mystyle}
+\newtheorem{sats}{Sats}
+\newtheorem{korollarium}{Korollarium}
+
+\newtheoremstyle{lemma_mystyle}%
+{3pt}% Space above
+{3pt}% Space below
+{\itshape\color{Orange}}% Body font
+{}% Indent amount
+{\bfseries\color{Orange}}% Theorem head font
+{.}% Punctuation after theorem head
+{.5em}% Space after theorem head
+{}
+\theoremstyle{lemma_mystyle}
+\newtheorem{lemma}{Lemma}
+
+\newtheoremstyle{superlemma_mystyle}%
+{3pt}% Space above
+{3pt}% Space below
+{\itshape\color{Blue}}% Body font
+{}% Indent amount
+{\bfseries\color{blue}}% Theorem head font
+{.}% Punctuation after theorem head
+{.5em}% Space after theorem head
+{}
+\theoremstyle{superlemma_mystyle}
+\newtheorem{superlemma}{Superlemma}
+
+\newtheoremstyle{cor_mystyle}%
+{3pt}% Space above
+{3pt}% Space below
+{\color{Purple}}% Body font
+{}% Indent amount
+{\bfseries\color{Purple}}% Theorem head font
+{.}% Punctuation after theorem head
+{.5em}% Space after theorem head
+{}
+\theoremstyle{cor_mystyle}
+\newtheorem{foljdsats}{Följdsats}[section]
+
+\newtheoremstyle{def_mystyle}%
+{3pt}% Space above
+{3pt}% Space below
+{\color{Green}}% Body font
+{}% Indent amount
+{\bfseries\color{Green}}% Theorem head font
+{.}% Punctuation after theorem head
+{.5em}% Space after theorem head
+{}
+\theoremstyle{def_mystyle}
+\newtheorem{problem}{Problem}
+\newtheorem*{ledtrad}{\textit{Ledtråd}}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{beteckning}{\textcolor{red}{Egen definition}}[section]
+\newtheorem{exempel}{Exempel}[section]
+\newtheorem{kommentar}{Remark}
+\newtheorem{step}{Step}
+
+\usepackage{baskervillef}
+\usepackage[varqu,varl,var0]{inconsolata}
+\usepackage[scale=.95,type1]{cabin}
+\usepackage[baskerville,vvarbb]{newtxmath}
+\usepackage[cal=boondoxo]{mathalfa}
